@@ -10,8 +10,8 @@ const jakarta = Plus_Jakarta_Sans({
 })
 
 export const metadata = {
-  title: 'mydasteran',
-  description: 'Katalog & member area mydasteran.id',
+ manifest: "/manifest.json",
+  
 }
 
 export default function RootLayout({ children }) {

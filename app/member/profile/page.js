@@ -476,7 +476,7 @@ export default function MemberProfilePage() {
     </p>
 
     <a
-      href="https://wa.me/6281234567890?text=Halo%20admin%2C%20saya%20butuh%20bantuan%20terkait%20akun%20member."
+      href="https://wa.me/6282234707911?text=Halo%20admin%2C%20saya%20butuh%20bantuan%20terkait%20akun%20member."
       target="_blank"
       rel="noopener noreferrer"
       className="flex w-full items-center justify-center gap-2 rounded-full bg-[#25D366] py-2 text-[11px] font-semibold text-white shadow hover:bg-[#1ebe5c] transition"

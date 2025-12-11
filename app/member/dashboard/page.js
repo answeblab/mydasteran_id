@@ -155,7 +155,7 @@ export default function MemberDashboardPage() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[#006B65] text-[11px] font-bold text-white">
-              P
+             MY
             </div>
             <div>
               <p className="text-[11px] font-bold uppercase tracking-wide text-[#0F172A]">
@@ -243,7 +243,7 @@ export default function MemberDashboardPage() {
     onClick={() => setShowTerms(true)}
     className="font-semibold text-[12px] text-[#0E918C] underline underline-offset-2"
   >
-    Cek Syarat & Ketentuan
+    Syarat & Ketentuan
   </button>
   .
 </div>

@@ -1,12 +1,14 @@
 {
-  "name": "mydasteran Member",
+  "id": "/member/dashboard",
+  "name": "mydasteran",
   "short_name": "mydasteran",
   "description": "Member & loyalty dashboard mydasteran.id",
-  "start_url": "/member/dashboard",
+  "start_url": "/member/login",
   "display": "standalone",
   "background_color": "#F4FBFA",
   "theme_color": "#006B65",
   "orientation": "portrait",
+  "scope": "/",
   "icons": [
     {
       "src": "/icons/icon-192.png",

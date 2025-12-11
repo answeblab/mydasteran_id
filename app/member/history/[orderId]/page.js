@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase/client'
-import { ArrowLeft, ReceiptText,   CircleDollarSign, } from 'lucide-react'
+import { ArrowLeft, ReceiptText,   CircleDollarSign, Truck } from 'lucide-react'
 
 export default function OrderDetailPage() {
   const router = useRouter()
@@ -90,6 +90,8 @@ const orderId = params?.orderId
             loyalty_redeem_points,
             created_at,
             updated_at,
+            payment_method_name,
+            shipping_provider_name,
             items
           `
           )
@@ -306,13 +308,13 @@ const isMinus = netPoints < 0
               <tr className="border-t border-[#E1F0EE]">
                 <td className="px-3 py-2 text-[#6B7B85]">Poin didapat</td>
                 <td className="px-3 py-2 text-right font-medium text-[#0E7A4E]">
-                  +{order.loyalty_points_earned} pt
+                  +{order.loyalty_points_earned} Xp
                 </td>
               </tr>
             )}
             {order.loyalty_redeem_points > 0 && (
               <tr>
-                <td className="px-3 py-2 text-[#6B7B85]">Poin digunakan</td>
+                <td  className="px-3 py-2 text-[#6B7B85]">Poin digunakan</td>
                 <td className="px-3 py-2 text-right font-medium text-[#C7504A]">
                   -{order.loyalty_redeem_points} pt
                 </td>
@@ -320,6 +322,22 @@ const isMinus = netPoints < 0
             )}
           </>
         )}
+
+        <tr className="border-t border-[#E1F0EE]">
+          <td className="px-3 py-2 text-[10px] text-[#8CA2AA]">Metode Pembayaran</td>
+          <td className="px-3 py-2 text-right text-[10px] text-[#8CA2AA]">
+            {order.payment_method_name}
+          </td>
+        </tr>
+        <tr className="border-t border-[#E1F0EE]">
+  <td className="px-3 py-2 text-[10px] text-[#8CA2AA] flex items-center gap-1">
+    <Truck className="h-4 w-4" />
+    Kurir
+  </td>
+  <td className="px-3 py-2 text-right text-[10px] text-[#8CA2AA]">
+    {order.shipping_provider_name}
+  </td>
+</tr>
 
         <tr className="border-t border-[#E1F0EE]">
           <td className="px-3 py-2 text-[10px] text-[#8CA2AA]">Dibuat</td>
@@ -337,7 +355,9 @@ const isMinus = netPoints < 0
     </table>
   </div>
 </section>
-        
+
+
+    
       </div>
     </main>
   )

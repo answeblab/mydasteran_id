@@ -106,8 +106,8 @@ export default function HomePage() {
           >
             <span className="mr-1 text-[11px]">Menu</span>
             <span className="flex flex-col space-y-[3px]">
-              <span className="h-[2px] w-3 rounded bg-slate-700" />
-              <span className="h-[2px] w-3 rounded bg-slate-700" />
+              <span className="h-0.5 w-3 rounded bg-slate-700" />
+              <span className="h-0.5 w-3 rounded bg-slate-700" />
             </span>
           </button>
         </div>

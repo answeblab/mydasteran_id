@@ -8,7 +8,6 @@ import { supabase } from "@/lib/supabase/client";
 import { CircleDollarSignIcon, House, Clock3, User2 } from "lucide-react";
 
 export default function MemberDashboardPage() {
-
   const router = useRouter();
   const [user, setUser] = useState(null);
   const [customer, setCustomer] = useState(null);
@@ -16,7 +15,19 @@ export default function MemberDashboardPage() {
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState(null);
-    const [showTerms, setShowTerms] = useState(false)
+  const [showTerms, setShowTerms] = useState(false);
+  const [showInstallHint, setShowInstallHint] = useState(false);
+const [hintPlatform, setHintPlatform] = useState("android"); // "ios" | "android"
+
+
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
+  const [canInstall, setCanInstall] = useState(false);
+  const isInstalled =
+    typeof window !== "undefined" &&
+    (window.matchMedia?.("(display-mode: standalone)")?.matches ||
+      window.navigator.standalone === true);
+
+  const [showIosHint, setShowIosHint] = useState(false);
 
   const prettyPhone = () => {
     const raw =
@@ -42,6 +53,42 @@ export default function MemberDashboardPage() {
       hour: "2-digit",
       minute: "2-digit",
     });
+  };
+  const adjustExpiryToMonthEnd = (isoString) => {
+    if (!isoString) return null;
+    const d = new Date(isoString);
+    if (Number.isNaN(d.getTime())) return null;
+
+    // Kalau jatuh di tgl 1, mundurin 1 hari => jadi akhir bulan sebelumnya
+    if (d.getDate() === 1) d.setDate(d.getDate() - 1);
+
+    return d;
+  };
+
+  const formatDateShort = (input) => {
+    if (!input) return "-";
+    const d = input instanceof Date ? input : new Date(input);
+    if (Number.isNaN(d.getTime())) return "-";
+
+    return d.toLocaleDateString("id-ID", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+  };
+
+  const expiryLabel = (input) => {
+    if (!input) return null;
+    const exp = input instanceof Date ? input : new Date(input);
+    if (Number.isNaN(exp.getTime())) return null;
+
+    const now = new Date();
+    const diffMs = exp.getTime() - now.getTime();
+    const days = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+
+    if (days < 0) return "sudah lewat";
+    if (days === 0) return "hari ini";
+    return `${days} hari lagi`;
   };
 
   const formatNumber = (value) => {
@@ -110,7 +157,7 @@ export default function MemberDashboardPage() {
         const { data: txData, error: txError } = await supabase
           .from("v_loyalty_activity")
           .select(
-            "loyalty_tx_id, type, type_label, signed_points, points, description, created_at, order_id, order_number, year, month"
+            "loyalty_tx_id, type, type_label, signed_points, points, description, created_at, order_id, order_number, year, month, expires_at"
           )
           .eq("customer_id", customerData.id)
           .eq("year", currentYear)
@@ -135,9 +182,74 @@ export default function MemberDashboardPage() {
     loadData();
   }, [router]);
 
+  useEffect(() => {
+    const handler = (e) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      setCanInstall(true);
+    };
+
+    const onInstalled = () => {
+      setCanInstall(false);
+      setDeferredPrompt(null);
+    };
+
+    window.addEventListener("beforeinstallprompt", handler);
+    window.addEventListener("appinstalled", onInstalled);
+
+    return () => {
+      window.removeEventListener("beforeinstallprompt", handler);
+      window.removeEventListener("appinstalled", onInstalled);
+    };
+  }, []);
+
+  useEffect(() => {
+  const t = setTimeout(() => {
+    const isInstalled =
+      window.matchMedia?.("(display-mode: standalone)")?.matches ||
+      window.navigator.standalone === true;
+
+    if (isInstalled) return;
+
+    const shown = localStorage.getItem("pwa_hint_shown");
+    if (shown) return;
+
+    const ua = navigator.userAgent || "";
+    const isIOS = /iphone|ipad|ipod/i.test(ua);
+
+    setHintPlatform(isIOS ? "ios" : "android");
+    setShowInstallHint(true);
+
+    localStorage.setItem("pwa_hint_shown", "1");
+  }, 0);
+
+  return () => clearTimeout(t);
+}, []);
+
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
     router.replace("/");
+  };
+
+  const handleInstallPwa = async () => {
+    // iOS tidak support beforeinstallprompt
+    const isIOS =
+      /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
+
+    if (isIOS) {
+      setShowIosHint(true);
+      return;
+    }
+
+    if (!deferredPrompt) return;
+
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === "accepted") {
+      setCanInstall(false);
+      setDeferredPrompt(null);
+    }
   };
 
   if (loading) {
@@ -155,7 +267,7 @@ export default function MemberDashboardPage() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[#006B65] text-[11px] font-bold text-white">
-             MY
+              MY
             </div>
             <div>
               <p className="text-[14px] font-bold uppercase tracking-wide text-[#0F172A]">
@@ -167,7 +279,16 @@ export default function MemberDashboardPage() {
             </div>
           </div>
 
-          <button
+          {!isInstalled &&
+            (canInstall || /iphone|ipad|ipod/i.test(navigator.userAgent)) && (
+              <button
+                onClick={handleInstallPwa}
+                className="rounded-full border bg-[#006B65] px-3 py-1 text-[11px] font-semibold text-white hover:bg-[#045F5A]"
+              >
+                Install App
+              </button>
+            )}
+            <button
             onClick={handleLogout}
             className="rounded-full border border-[#C4E3DF] px-3 py-1 text-[14px] text-[#006B65] hover:bg-[#E7F3F2]"
           >
@@ -183,65 +304,69 @@ export default function MemberDashboardPage() {
         )}
 
         {/* WELCOME & LOYALTY SUMMARY */}
-         <section className="rounded-2xl border border-transparent bg-linear-to-br from-[#E7F8F7] via-white to-[#DFF4F1] p-5 shadow-md">
-      <p className="text-[18px] font-semibold tracking-wide text-[#0E918C]">
-        Selamat datang,{" "}
-        <span className="text-[18px] font-semibold text-[#0F172A] normal-case">
-          {customer?.name}
-        </span>
-      </p>
+        <section className="rounded-2xl border border-transparent bg-linear-to-br from-[#E7F8F7] via-white to-[#DFF4F1] p-5 shadow-md">
+          <p className="text-[18px] font-semibold tracking-wide text-[#0E918C]">
+            Selamat datang,{" "}
+            <span className="text-[18px] font-semibold text-[#0F172A] normal-case">
+              {customer?.name}
+            </span>
+          </p>
 
-      <p className="mt-1 text-[12px] text-[#6B7B85]">{prettyPhone?.()}</p>
+          <p className="mt-1 text-[12px] text-[#6B7B85]">{prettyPhone?.()}</p>
 
-      <p className="mt-3 text-xs text-[#6B7B85]">
-        Di halaman ini Anda dapat melihat ringkasan poin loyalty, Level member, dan riwayat aktivitas
-        yang terhubung dengan - <span className="font-bold text-[12px]">mydasteran.id.</span>
-      </p>
+          <p className="mt-3 text-xs text-[#6B7B85]">
+            Di halaman ini Anda dapat melihat ringkasan poin loyalty, Level
+            member, dan riwayat aktivitas yang terhubung dengan -{" "}
+            <span className="font-bold text-[12px]">mydasteran.id.</span>
+          </p>
 
-      {/* Ringkasan (2 card) */}
-      {loyalty ? (
-        <div className="mt-4 grid grid-cols-2 gap-2 text-center text-[12px]">
-          <div className="rounded-xl bg-[#E1F4F2] px-2 py-3">
-            <p className="text-[11px] uppercase tracking-wide text-[#0E918C]">Point</p>
-            <div className="mt-1 flex items-center justify-center gap-1 text-sm font-semibold text-[#0F172A]">
-              <CircleDollarSignIcon className="h-4 w-4 text-[#ffc400]" />
-              {formatNumber?.(loyalty.points_balance)}
+          {/* Ringkasan (2 card) */}
+          {loyalty ? (
+            <div className="mt-4 grid grid-cols-2 gap-2 text-center text-[12px]">
+              <div className="rounded-xl bg-[#E1F4F2] px-2 py-3">
+                <p className="text-[11px] uppercase tracking-wide text-[#0E918C]">
+                  Point
+                </p>
+                <div className="mt-1 flex items-center justify-center gap-1 text-sm font-semibold text-[#0F172A]">
+                  <CircleDollarSignIcon className="h-4 w-4 text-[#ffc400]" />
+                  {formatNumber?.(loyalty.points_balance)}
+                </div>
+              </div>
+
+              <div className="rounded-xl bg-[#DEF4F1] px-2 py-3">
+                <p className="text-[11px] uppercase tracking-wide text-[#0E918C]">
+                  Total Belanja
+                </p>
+                <p className="mt-1 text-sm font-semibold text-[#0F172A]">
+                  Rp {formatNumber?.(loyalty.total_eligible_amount)}
+                </p>
+              </div>
             </div>
+          ) : (
+            <div className="mt-4 rounded-xl bg-[#E7F3F2] px-3 py-3 text-[12px] text-[#0F4F4C]">
+              Akun loyalty belum aktif untuk profile ini. Hubungi admin untuk
+              aktivasi atau cek ulang data customer.
+            </div>
+          )}
+
+          {/* Timeline level (di bawah) */}
+          {loyalty ? (
+            <TierProgress totalEligible={loyalty.total_eligible_amount} />
+          ) : null}
+
+          {/* Link syarat & ketentuan */}
+          <div className="mt-4 text-[11px] text-[#6B7B85]">
+            Dengan menggunakan program member mydasteran.id, Anda menyetujui{" "}
+            <button
+              type="button"
+              onClick={() => setShowTerms?.(true)}
+              className="text-[12px] font-semibold text-[#0E918C]"
+            >
+              Syarat & Ketentuan
+            </button>
+            .
           </div>
-
-          <div className="rounded-xl bg-[#DEF4F1] px-2 py-3">
-            <p className="text-[11px] uppercase tracking-wide text-[#0E918C]">Total Belanja</p>
-            <p className="mt-1 text-sm font-semibold text-[#0F172A]">
-              Rp {formatNumber?.(loyalty.total_eligible_amount)}
-            </p>
-          </div>
-        </div>
-      ) : (
-        <div className="mt-4 rounded-xl bg-[#E7F3F2] px-3 py-3 text-[12px] text-[#0F4F4C]">
-          Akun loyalty belum aktif untuk profile ini. Hubungi admin untuk aktivasi atau cek ulang data customer.
-        </div>
-      )}
-
-      
-
-      {/* Timeline level (di bawah) */}
-      {loyalty ? (
-  <TierProgress totalEligible={loyalty.total_eligible_amount} />
-) : null}
-
-{/* Link syarat & ketentuan */}
-      <div className="mt-4 text-[11px] text-[#6B7B85]">
-        Dengan menggunakan program member mydasteran.id, Anda menyetujui{" "}
-        <button
-          type="button"
-          onClick={() => setShowTerms?.(true)}
-          className="text-[12px] font-semibold text-[#0E918C]"
-        >
-          Syarat & Ketentuan
-        </button>
-        .
-      </div>
-    </section>
+        </section>
 
         {/* RIWAYAT LOYALTY */}
         <section className="rounded-2xl border border-[#C4E3DF] bg-white p-5 shadow-md">
@@ -265,6 +390,7 @@ export default function MemberDashboardPage() {
             <div className="space-y-2">
               {transactions.map((tx) => {
                 const value = tx.signed_points ?? tx.points ?? 0;
+                const expAdj = adjustExpiryToMonthEnd(tx.expires_at);
                 const isMinus = value < 0;
 
                 return (
@@ -283,15 +409,32 @@ export default function MemberDashboardPage() {
                         </p>
                       )}
 
-                      <p className="mt-1 text-[10px] text-[#8CA2AA]">
-                        {formatDate(tx.created_at)}
-                        {tx.order_number && (
-                          <span className="ml-1">
-                            • Order:{" "}
-                            <span className="font-mono">{tx.order_number}</span>
-                          </span>
-                        )}
-                      </p>
+                      {/* meta info */}
+                      <div className="mt-1 space-y-1">
+                        <p className="text-[10px] text-[#8CA2AA]">
+                          {formatDate(tx.created_at)}
+                          {tx.order_number ? (
+                            <span className="ml-1">
+                              • Order:{" "}
+                              <span className="font-mono">
+                                {tx.order_number}
+                              </span>
+                            </span>
+                          ) : null}
+                        </p>
+
+                        {/* chip expired */}
+                        {value > 0 && expAdj ? (
+                          <div className="flex flex-wrap items-center gap-1">
+                            <span className="rounded-full bg-[#FFF4D6] px-2 py-0.5 text-[10px] font-semibold text-[#8A5A00]">
+                              Expired: {formatDateShort(expAdj)}
+                            </span>
+                            <span className="rounded-full bg-[#F1F5F9] px-2 py-0.5 text-[10px] text-[#475569]">
+                              {expiryLabel(expAdj)}
+                            </span>
+                          </div>
+                        ) : null}
+                      </div>
                     </div>
 
                     <div className="ml-3 text-right">
@@ -340,61 +483,114 @@ export default function MemberDashboardPage() {
         </div>
       </nav>
       {/* DIALOG SYARAT & KETENTUAN */}
-{showTerms && (
+      {showTerms && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+          <div className="w-full max-w-md rounded-2xl bg-white p-4 shadow-lg">
+            <div className="mb-2 flex items-center justify-between">
+              <h2 className="text-sm font-semibold text-[#0F172A]">
+                Syarat & Ketentuan Member
+              </h2>
+              <button
+                type="button"
+                onClick={() => setShowTerms(false)}
+                className="text-[12px] text-[#6B7B85] hover:text-[#0F172A]"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="max-h-64 space-y-2 overflow-y-auto pr-1 text-[12px] text-[#4B5563]">
+              <p>
+                Program member & loyalty mydasteran.id berlaku untuk pelanggan
+                yang terdaftar dengan nomor WhatsApp yang aktif setelah
+                melakukan min. 1x transaksi pembelian yg berhasil.
+              </p>
+              <ul className="list-disc pl-4">
+                <li>
+                  Poin diberikan berdasarkan transaksi yang tercatat di sistem
+                  pada saat order berstatus{" "}
+                  <span className="font-bold text-[12px]">paid / lunas</span>.
+                </li>
+                <li>
+                  Poin tidak dapat diuangkan, ditransfer atau dikembalikan
+                  dengan uang tunai dan hanya dapat digunakan sebagai potongan
+                  pada transaksi tertentu sesuai kebijakan toko.
+                </li>
+                <li>
+                  Masa berlaku poin adalah 2 bulan (terhitung sejak transaksi
+                  dan dibulatkan ke akhir bulan berikutnya), misalkan anda
+                  mendapat poin pada tgl 15 Januari, maka akan hangus pada 28
+                  Februari.
+                </li>
+                <li>
+                  Data order dan poin yang tampil di halaman ini dapat mengalami
+                  keterlambatan sinkronisasi dengan sistem internal.
+                </li>
+                <li>
+                  <span className="font-bold text-[12px]">mydasteran.id</span>{" "}
+                  berhak melakukan pembekuan akun member jika ditemukan adanya
+                  penyalahgunaan.
+                </li>
+              </ul>
+              <p className="mt-2">
+                Untuk pertanyaan lebih lanjut, silakan hubungi admin melalui
+                WhatsApp yang tertera pada halaman profil.
+              </p>
+            </div>
+
+            <div className="mt-3 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setShowTerms(false)}
+                className="rounded-full bg-[#0E918C] px-4 py-1.5 text-[12px] font-semibold text-white hover:bg-[#0B746E]"
+              >
+                Saya mengerti
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {showInstallHint && (
   <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
     <div className="w-full max-w-md rounded-2xl bg-white p-4 shadow-lg">
       <div className="mb-2 flex items-center justify-between">
-        <h2 className="text-sm font-semibold text-[#0F172A]">
-          Syarat & Ketentuan Member
-        </h2>
+        <h2 className="text-sm font-semibold text-[#0F172A]">Install Aplikasi</h2>
         <button
           type="button"
-          onClick={() => setShowTerms(false)}
-          className="text-[12px] text-[#6B7B85] hover:text-[#0F172A]"
+          onClick={() => setShowInstallHint(false)}
+          className="text-[11px] text-[#6B7B85] hover:text-[#0F172A]"
         >
           ✕
         </button>
       </div>
 
-      <div className="max-h-64 space-y-2 overflow-y-auto pr-1 text-[12px] text-[#4B5563]">
-        <p>
-          Program member & loyalty mydasteran.id berlaku untuk pelanggan yang
-          terdaftar dengan nomor WhatsApp yang aktif setelah melakukan min. 1x transaksi pembelian yg berhasil.
-        </p>
-        <ul className="list-disc pl-4">
-          <li>
-            Poin diberikan berdasarkan transaksi yang tercatat di sistem pada
-            saat order berstatus <span className="font-bold text-[12px]">paid / lunas</span>.
-          </li>
-          <li>
-            Poin tidak dapat diuangkan, ditransfer atau dikembalikan dengan uang tunai dan hanya dapat digunakan sebagai potongan
-            pada transaksi tertentu sesuai kebijakan toko.
-          </li>
-          <li>
-            Masa berlaku poin adalah 2 bulan (terhitung sejak transaksi dan dibulatkan ke akhir bulan berikutnya), misalkan anda mendapat poin pada tgl 15 Januari, maka akan hangus pada 28 Februari.
-          </li>
-          <li>
-            Data order dan poin yang tampil di halaman ini dapat mengalami
-            keterlambatan sinkronisasi dengan sistem internal.
-          </li>
-          <li>
-            <span className="font-bold text-[12px]">mydasteran.id</span> berhak melakukan pembekuan akun member jika ditemukan
-            adanya penyalahgunaan.
-          </li>
-        </ul>
-        <p className="mt-2">
-          Untuk pertanyaan lebih lanjut, silakan hubungi admin melalui WhatsApp
-          yang tertera pada halaman profil.
-        </p>
-      </div>
+      {hintPlatform === "ios" ? (
+        <div className="space-y-2 text-[12px] text-[#4B5563]">
+          <p>Untuk iPhone/iPad, install lewat Safari:</p>
+          <ul className="list-disc pl-4">
+            <li>Buka website ini di <b>Safari</b></li>
+            <li>Tap tombol <b>Share</b> (ikon kotak panah ke atas)</li>
+            <li>Pilih <b>Add to Home Screen</b></li>
+          </ul>
+        </div>
+      ) : (
+        <div className="space-y-2 text-[12px] text-[#4B5563]">
+          <p>Untuk Android/Chrome:</p>
+          <ul className="list-disc pl-4">
+            <li>Buka menu browser (⋮)</li>
+            <li>Pilih <b>Install app</b> / <b>Add to Home screen</b></li>
+            <li>Pastikan bukan mode incognito</li>
+          </ul>
+        </div>
+      )}
 
       <div className="mt-3 flex justify-end">
         <button
           type="button"
-          onClick={() => setShowTerms(false)}
-          className="rounded-full bg-[#0E918C] px-4 py-1.5 text-[12px] font-semibold text-white hover:bg-[#0B746E]"
+          onClick={() => setShowInstallHint(false)}
+          className="rounded-full bg-[#0E918C] px-4 py-1.5 text-[11px] font-semibold text-white hover:bg-[#0B746E]"
         >
-          Saya mengerti
+          Oke
         </button>
       </div>
     </div>
@@ -404,8 +600,6 @@ export default function MemberDashboardPage() {
     </main>
   );
 }
-
-
 
 function formatRupiah(n = 0) {
   return new Intl.NumberFormat("id-ID").format(Math.max(0, Math.floor(n)));
@@ -421,11 +615,11 @@ export function TierProgress({ totalEligible = 0 }) {
   // progress 0..1 untuk bar keseluruhan (0 -> 200jt)
   const p = Math.min(totalEligible / T2, 1);
 
-  const nextTarget =
-    tier === "Agen" ? T1 : tier === "Juragan" ? T2 : null;
+  const nextTarget = tier === "Agen" ? T1 : tier === "Juragan" ? T2 : null;
 
   const remaining = nextTarget ? Math.max(nextTarget - totalEligible, 0) : 0;
-  const nextLabel = tier === "Agen" ? "Juragan" : tier === "Juragan" ? "Sultan" : null;
+  const nextLabel =
+    tier === "Agen" ? "Juragan" : tier === "Juragan" ? "Sultan" : null;
 
   // posisi milestone: Agen(0), Juragan(0.5), Sultan(1)
   const stops = [
@@ -446,12 +640,12 @@ export function TierProgress({ totalEligible = 0 }) {
           </p>
         </div>
 
-       <div className="inline-flex items-center gap-1.5 rounded-full bg-[#0E918C]/10 px-3 py-1 text-[12px] font-semibold text-[#0E918C]">
-  <span className="text-[14px] leading-none">
-    {tier === "Sultan" ? "👑" : "✨"}
-  </span>
-  {tier}
-</div>
+        <div className="inline-flex items-center gap-1.5 rounded-full bg-[#0E918C]/10 px-3 py-1 text-[12px] font-semibold text-[#0E918C]">
+          <span className="text-[14px] leading-none">
+            {tier === "Sultan" ? "👑" : "✨"}
+          </span>
+          {tier}
+        </div>
       </div>
 
       {/* Bar */}
@@ -493,15 +687,41 @@ export function TierProgress({ totalEligible = 0 }) {
 
         {/* Labels */}
         <div className="mt-2 flex justify-between text-[12px]">
-          <span className={tier === "Agen" ? "font-semibold text-[#0E918C]" : "text-slate-500"}>Agen</span>
-          <span className={tier === "Juragan" ? "font-semibold text-[#0E918C]" : "text-slate-500"}>Juragan</span>
-          <span className={tier === "Sultan" ? "font-semibold text-[#0E918C]" : "text-slate-500"}>Sultan</span>
+          <span
+            className={
+              tier === "Agen"
+                ? "font-semibold text-[#0E918C]"
+                : "text-slate-500"
+            }
+          >
+            Agen
+          </span>
+          <span
+            className={
+              tier === "Juragan"
+                ? "font-semibold text-[#0E918C]"
+                : "text-slate-500"
+            }
+          >
+            Juragan
+          </span>
+          <span
+            className={
+              tier === "Sultan"
+                ? "font-semibold text-[#0E918C]"
+                : "text-slate-500"
+            }
+          >
+            Sultan
+          </span>
         </div>
 
         {/* Info “tinggal berapa lagi” */}
         {nextTarget ? (
           <div className="mt-3 rounded-xl bg-[#E7F8F7] px-3 py-2 text-[12px] text-[#0F4F4C]">
-            Tinggal <span className="font-semibold">Rp {formatRupiah(remaining)}</span> lagi untuk naik ke{" "}
+            Tinggal{" "}
+            <span className="font-semibold">Rp {formatRupiah(remaining)}</span>{" "}
+            lagi untuk naik ke{" "}
             <span className="font-semibold">{nextLabel}</span>.
           </div>
         ) : (
@@ -513,4 +733,3 @@ export function TierProgress({ totalEligible = 0 }) {
     </div>
   );
 }
-

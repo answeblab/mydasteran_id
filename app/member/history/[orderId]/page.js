@@ -321,7 +321,7 @@ const isMinus = netPoints < 0
     <Truck className="h-4 w-4" />
     Kurir
   </td>
-  <td className="px-3 py-2 text-right text-[12px] text-[#8CA2AA]">
+  <td className="px-3 py-2 text-right text-[11px] text-[#8CA2AA]">
     {order.shipping_provider_name}
   </td>
 </tr>

@@ -184,7 +184,7 @@ const isMinus = netPoints < 0
         <p className="text-[12px] font-semibold text-[#0F172A]">
           {order.order_number}
         </p>
-        <p className="text-[10px] text-[#6B7B85]">
+        <p className="text-[11px] text-[#6B7B85]">
           {formatDate(order.created_at)}
         </p>
       </div>
@@ -196,24 +196,11 @@ const isMinus = netPoints < 0
         {formatCurrency(order.grand_total)}
       </p>
 
-      {hasNetPoints && (
-        <span
-          className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-[10px] font-medium ${
-            isMinus
-              ? 'bg-[#FFF2F2] text-[#C7504A]'
-              : 'bg-[#E1F4F2] text-[#0E7A4E]'
-          }`}
-        >
-          <CircleDollarSign className="h-3 w-3" />
-          {isMinus ? '-' : '+'}
-          {Math.abs(netPoints)}
-        </span>
-      )}
     </div>
   </div>
 
   {/* badges status di bawahnya */}
-  <div className="mt-3 flex flex-wrap gap-2 text-[10px]">
+  <div className="mt-3 flex flex-wrap gap-2 text-[11px]">
     <span className="rounded-full bg-[#E1F4F2] px-2 py-1 text-[#0E918C]">
       {order.payment_status}
     </span>
@@ -245,7 +232,7 @@ const isMinus = netPoints < 0
           className="flex items-center gap-3 rounded-xl border border-[#E1F0EE] bg-[#F7FCFB] p-3"
         >
           {/* Number bubble */}
-          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#0E918C] text-[10px] font-bold text-white">
+          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#0E918C] text-[12px] font-bold text-white">
             {index + 1}
           </div>
 
@@ -257,7 +244,7 @@ const isMinus = netPoints < 0
           {/* Item info */}
           <div className="flex flex-1 flex-col">
             <p className="font-medium text-[#0F172A]">{item.product_name}</p>
-            <p className="text-[10px] text-[#6B7B85]">
+            <p className="text-[12px] text-[#6B7B85]">
               {item.quantity} × {formatCurrency(item.unit_price)}
             </p>
           </div>
@@ -325,7 +312,7 @@ const isMinus = netPoints < 0
 
         <tr className="border-t border-[#E1F0EE]">
           <td className="px-3 py-2 text-[10px] text-[#8CA2AA]">Metode Pembayaran</td>
-          <td className="px-3 py-2 text-right text-[10px] text-[#8CA2AA]">
+          <td className="px-3 py-2 text-right text-[12px] text-[#8CA2AA]">
             {order.payment_method_name}
           </td>
         </tr>
@@ -334,20 +321,20 @@ const isMinus = netPoints < 0
     <Truck className="h-4 w-4" />
     Kurir
   </td>
-  <td className="px-3 py-2 text-right text-[10px] text-[#8CA2AA]">
+  <td className="px-3 py-2 text-right text-[12px] text-[#8CA2AA]">
     {order.shipping_provider_name}
   </td>
 </tr>
 
         <tr className="border-t border-[#E1F0EE]">
           <td className="px-3 py-2 text-[10px] text-[#8CA2AA]">Dibuat</td>
-          <td className="px-3 py-2 text-right text-[10px] text-[#8CA2AA]">
+          <td className="px-3 py-2 text-right text-[12px] text-[#8CA2AA]">
             {formatDate(order.created_at)}
           </td>
         </tr>
         <tr>
           <td className="px-3 py-2 text-[10px] text-[#8CA2AA]">Diupdate</td>
-          <td className="px-3 py-2 text-right text-[10px] text-[#8CA2AA]">
+          <td className="px-3 py-2 text-right text-[12px] text-[#8CA2AA]">
             {formatDate(order.updated_at)}
           </td>
         </tr>

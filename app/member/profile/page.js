@@ -230,14 +230,14 @@ export default function MemberProfilePage() {
         {/* TOP BAR */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[#006B65] text-[11px] font-bold text-white">
+            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[#006B65] text-[12px] font-bold text-white">
               <User2 className="h-4 w-4" />
             </div>
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-wide text-[#0F172A]">
+              <p className="text-[14px] font-bold uppercase tracking-wide text-[#0F172A]">
                 Profil Member
               </p>
-              <p className="text-[10px] text-[#6B7B85]">
+              <p className="text-[12px] text-[#6B7B85]">
                 {customer?.name || 'Member'} {prettyPhone() && `• ${prettyPhone()}`}
               </p>
             </div>
@@ -246,13 +246,13 @@ export default function MemberProfilePage() {
 
         {/* NOTIF ERROR */}
         {errorMsg && (
-          <div className="rounded-2xl border border-[#F2B3B3] bg-[#FFF5F5] p-3 text-[11px] text-[#B43F3F]">
+          <div className="rounded-2xl border border-[#F2B3B3] bg-[#FFF5F5] p-3 text-[12px] text-[#B43F3F]">
             {errorMsg}
           </div>
         )}
 
         {/* DAFTAR ALAMAT */}
-        <section className="rounded-2xl border border-[#C4E3DF] bg-white p-4 text-[11px] shadow-md">
+        <section className="rounded-2xl border border-[#C4E3DF] bg-white p-4 text-[12px] shadow-md">
           <div className="mb-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <MapPin className="h-4 w-4 text-[#0E918C]" />
@@ -263,7 +263,7 @@ export default function MemberProfilePage() {
             <button
               type="button"
               onClick={() => setFormOpen((prev) => !prev)}
-              className="inline-flex items-center gap-1 rounded-full border border-[#C4E3DF] px-2 py-1 text-[10px] text-[#0E918C] hover:bg-[#E7F3F2]"
+              className="inline-flex items-center gap-1 rounded-full border border-[#C4E3DF] px-2 py-1 text-[12px] text-[#0E918C] hover:bg-[#E7F3F2]"
             >
               <Plus className="h-3 w-3" />
               {formOpen ? 'Tutup form' : 'Alamat baru'}
@@ -271,7 +271,7 @@ export default function MemberProfilePage() {
           </div>
 
           {addresses.length === 0 ? (
-            <p className="text-[11px] text-[#6B7B85]">
+            <p className="text-[12px] text-[#6B7B85]">
               Belum ada alamat pengiriman yang tersimpan. Tambahkan alamat baru
               untuk memudahkan proses order berikutnya.
             </p>
@@ -283,7 +283,7 @@ export default function MemberProfilePage() {
                   className="rounded-xl border border-[#E1F0EE] bg-[#F7FCFB] p-3"
                 >
                   <div className="mb-1 flex items-center justify-between">
-                    <p className="text-[11px] font-semibold text-[#0F172A]">
+                    <p className="text-[12px] font-semibold text-[#0F172A]">
                       {addr.label}
                     </p>
                     {addr.is_default && (
@@ -292,13 +292,13 @@ export default function MemberProfilePage() {
                       </span>
                     )}
                   </div>
-                  <p className="text-[10px] font-medium text-[#0F172A]">
+                  <p className="text-[12px] font-medium text-[#0F172A]">
                     {addr.recipient_name}
                   </p>
-                  <p className="text-[10px] text-[#6B7B85]">
+                  <p className="text-[12px] text-[#6B7B85]">
                     {formatPhoneDisplay(addr.phone_number)}
                   </p>
-                  <p className="mt-1 text-[10px] text-[#4B5563]">
+                  <p className="mt-1 text-[12px] text-[#4B5563]">
                     {addr.address_line1}
                     {addr.kecamatan && `, Kec. ${addr.kecamatan}`}
                     {`, ${addr.city}, ${addr.province}, ${addr.postal_code}`}
@@ -311,96 +311,96 @@ export default function MemberProfilePage() {
           {/* FORM TAMBAH ALAMAT */}
           {formOpen && (
             <form onSubmit={handleSubmitAddress} className="mt-4 space-y-2">
-              <p className="text-[11px] font-semibold text-[#0F172A]">
+              <p className="text-[12px] font-semibold text-[#0F172A]">
                 Tambah alamat baru
               </p>
 
               <div className="grid grid-cols-2 gap-2">
                 <div className="col-span-2">
-                  <label className="mb-1 block text-[10px] text-[#6B7B85]">
+                  <label className="mb-1 block text-[12px] text-[#6B7B85]">
                     Label alamat (contoh: Rumah, Toko)
                   </label>
                   <input
                     value={label}
                     onChange={(e) => setLabel(e.target.value)}
-                    className="w-full rounded-xl border border-[#C4E3DF] bg-white px-3 py-2 text-[11px] text-[#0F172A] focus:border-[#0E918C] focus:outline-none"
+                    className="w-full rounded-xl border border-[#C4E3DF] bg-white px-3 py-2 text-[12px] text-[#0F172A] focus:border-[#0E918C] focus:outline-none"
                   />
                 </div>
                 <div className="col-span-2">
-                  <label className="mb-1 block text-[10px] text-[#6B7B85]">
+                  <label className="mb-1 block text-[12px] text-[#6B7B85]">
                     Nama penerima
                   </label>
                   <input
                     value={recipientName}
                     onChange={(e) => setRecipientName(e.target.value)}
-                    className="w-full rounded-xl border border-[#C4E3DF] bg-white px-3 py-2 text-[11px] text-[#0F172A] focus:border-[#0E918C] focus:outline-none"
+                    className="w-full rounded-xl border border-[#C4E3DF] bg-white px-3 py-2 text-[12px] text-[#0F172A] focus:border-[#0E918C] focus:outline-none"
                   />
                 </div>
                 <div className="col-span-2">
-                  <label className="mb-1 block text-[10px] text-[#6B7B85]">
+                  <label className="mb-1 block text-[12px] text-[#6B7B85]">
                     Nomor telepon
                   </label>
                   <input
                     value={phoneNumber}
                     onChange={(e) => setPhoneNumber(e.target.value)}
-                    className="w-full rounded-xl border border-[#C4E3DF] bg-white px-3 py-2 text-[11px] text-[#0F172A] focus:border-[#0E918C] focus:outline-none"
+                    className="w-full rounded-xl border border-[#C4E3DF] bg-white px-3 py-2 text-[12px] text-[#0F172A] focus:border-[#0E918C] focus:outline-none"
                     placeholder="Contoh: 62812xxxxxxx"
                   />
                 </div>
                 <div className="col-span-2">
-                  <label className="mb-1 block text-[10px] text-[#6B7B85]">
+                  <label className="mb-1 block text-[12px] text-[#6B7B85]">
                     Alamat lengkap
                   </label>
                   <textarea
                     value={addressLine1}
                     onChange={(e) => setAddressLine1(e.target.value)}
-                    className="w-full rounded-xl border border-[#C4E3DF] bg-white px-3 py-2 text-[11px] text-[#0F172A] focus:border-[#0E918C] focus:outline-none"
+                    className="w-full rounded-xl border border-[#C4E3DF] bg-white px-3 py-2 text-[12px] text-[#0F172A] focus:border-[#0E918C] focus:outline-none"
                     rows={2}
                   />
                 </div>
                 <div>
-                  <label className="mb-1 block text-[10px] text-[#6B7B85]">
+                  <label className="mb-1 block text-[12px] text-[#6B7B85]">
                     Kecamatan
                   </label>
                   <input
                     value={kecamatan}
                     onChange={(e) => setKecamatan(e.target.value)}
-                    className="w-full rounded-xl border border-[#C4E3DF] bg-white px-3 py-2 text-[11px] text-[#0F172A] focus:border-[#0E918C] focus:outline-none"
+                    className="w-full rounded-xl border border-[#C4E3DF] bg-white px-3 py-2 text-[12px] text-[#0F172A] focus:border-[#0E918C] focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="mb-1 block text-[10px] text-[#6B7B85]">
+                  <label className="mb-1 block text-[12px] text-[#6B7B85]">
                     Kota / Kab.
                   </label>
                   <input
                     value={city}
                     onChange={(e) => setCity(e.target.value)}
-                    className="w-full rounded-xl border border-[#C4E3DF] bg-white px-3 py-2 text-[11px] text-[#0F172A] focus:border-[#0E918C] focus:outline-none"
+                    className="w-full rounded-xl border border-[#C4E3DF] bg-white px-3 py-2 text-[12px] text-[#0F172A] focus:border-[#0E918C] focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="mb-1 block text-[10px] text-[#6B7B85]">
+                  <label className="mb-1 block text-[12px] text-[#6B7B85]">
                     Provinsi
                   </label>
                   <input
                     value={province}
                     onChange={(e) => setProvince(e.target.value)}
-                    className="w-full rounded-xl border border-[#C4E3DF] bg-white px-3 py-2 text-[11px] text-[#0F172A] focus:border-[#0E918C] focus:outline-none"
+                    className="w-full rounded-xl border border-[#C4E3DF] bg-white px-3 py-2 text-[12px] text-[#0F172A] focus:border-[#0E918C] focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="mb-1 block text-[10px] text-[#6B7B85]">
+                  <label className="mb-1 block text-[12px] text-[#6B7B85]">
                     Kode pos
                   </label>
                   <input
                     value={postalCode}
                     onChange={(e) => setPostalCode(e.target.value)}
-                    className="w-full rounded-xl border border-[#C4E3DF] bg-white px-3 py-2 text-[11px] text-[#0F172A] focus:border-[#0E918C] focus:outline-none"
+                    className="w-full rounded-xl border border-[#C4E3DF] bg-white px-3 py-2 text-[12px] text-[#0F172A] focus:border-[#0E918C] focus:outline-none"
                   />
                 </div>
               </div>
 
-              <label className="mt-1 flex items-center gap-2 text-[10px] text-[#0F172A]">
+              <label className="mt-1 flex items-center gap-2 text-[12px] text-[#0F172A]">
                 <input
                   type="checkbox"
                   checked={isDefault}
@@ -417,14 +417,14 @@ export default function MemberProfilePage() {
                     setFormOpen(false)
                     resetForm()
                   }}
-                  className="rounded-full border border-[#C4E3DF] px-3 py-1.5 text-[11px] text-[#6B7B85] hover:bg-[#E7F3F2]"
+                  className="rounded-full border border-[#C4E3DF] px-3 py-1.5 text-[12px] text-[#6B7B85] hover:bg-[#E7F3F2]"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
                   disabled={saving}
-                  className="rounded-full bg-[#0E918C] px-4 py-1.5 text-[11px] font-semibold text-white hover:bg-[#0B746E] disabled:opacity-60"
+                  className="rounded-full bg-[#0E918C] px-4 py-1.5 text-[12px] font-semibold text-white hover:bg-[#0B746E] disabled:opacity-60"
                 >
                   {saving ? 'Menyimpan…' : 'Simpan alamat'}
                 </button>
@@ -434,7 +434,7 @@ export default function MemberProfilePage() {
         </section>
 
    {/* FAQ & BANTUAN */}
-<section className="rounded-2xl border border-[#C4E3DF] bg-white p-4 text-[11px] shadow-md">
+<section className="rounded-2xl border border-[#C4E3DF] bg-white p-4 text-[12px] shadow-md">
   <div className="mb-2 flex items-center gap-2">
     <HelpCircle className="h-4 w-4 text-[#0E918C]" />
     <p className="text-sm font-semibold text-[#0F172A]">FAQ & Bantuan</p>
@@ -442,26 +442,26 @@ export default function MemberProfilePage() {
 
   <div className="space-y-2">
     <div>
-      <p className="text-[11px] font-medium text-[#0F172A]">
+      <p className="text-[12px] font-medium text-[#0F172A]">
         1. Bisakah saya menyimpan lebih dari satu alamat?
       </p>
-      <p className="text-[11px] text-[#6B7B85]">
+      <p className="text-[12px] text-[#6B7B85]">
         Bisa. Anda dapat menyimpan beberapa alamat (rumah, toko, gudang, dll).
       </p>
     </div>
 <div>
-      <p className="text-[11px] font-medium text-[#0F172A]">
+      <p className="text-[12px] font-medium text-[#0F172A]">
         2. apakah poin cashback bisa hangus?
       </p>
-      <p className="text-[11px] text-[#6B7B85]">
+      <p className="text-[12px] text-[#6B7B85]">
         Point cashback bisa hangus dalam 2 bulan (terhitung sejak bulan transaksi dan berakhir pada akhir bulan berikutnya)
       </p>
     </div>
     <div>
-      <p className="text-[11px] font-medium text-[#0F172A]">
+      <p className="text-[12px] font-medium text-[#0F172A]">
         3. Bagaimana jika no WhatsApp saya hilang atau ganti?
       </p>
-      <p className="text-[11px] text-[#6B7B85]">
+      <p className="text-[12px] text-[#6B7B85]">
         Hubungi admin agar akun anda dapat diperbarui.
       </p>
     </div>
@@ -470,7 +470,7 @@ export default function MemberProfilePage() {
 
   {/* WhatsApp kontak admin */}
   <div className="mt-4 rounded-xl bg-[#E7F3F2] p-3 text-[#0F4F4C]">
-    <p className="mb-2 flex items-center gap-1 text-[11px] font-semibold">
+    <p className="mb-2 flex items-center gap-1 text-[12px] font-semibold">
       <Phone className="h-3 w-3" />
       Bantuan langsung
     </p>
@@ -479,7 +479,7 @@ export default function MemberProfilePage() {
       href="https://wa.me/6282234707911?text=Halo%20admin%2C%20saya%20butuh%20bantuan%20terkait%20akun%20member."
       target="_blank"
       rel="noopener noreferrer"
-      className="flex w-full items-center justify-center gap-2 rounded-full bg-[#25D366] py-2 text-[11px] font-semibold text-white shadow hover:bg-[#1ebe5c] transition"
+      className="flex w-full items-center justify-center gap-2 rounded-full bg-[#25D366] py-2 text-[12px] font-semibold text-white shadow hover:bg-[#1ebe5c] transition"
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -500,7 +500,7 @@ export default function MemberProfilePage() {
 
       {/* BOTTOM NAVBAR */}
       <nav className="fixed inset-x-0 bottom-0 border-t border-[#C4E3DF] bg-white/95 backdrop-blur">
-        <div className="mx-auto flex max-w-md items-center justify-between px-8 py-2.5 text-[10px]">
+        <div className="mx-auto flex max-w-md items-center justify-between px-8 py-2.5 text-[12px]">
           <Link
             href="/member/dashboard"
             className="flex flex-col items-center gap-0.5 text-[#6B7B85]"

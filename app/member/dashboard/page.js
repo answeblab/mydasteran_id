@@ -158,10 +158,10 @@ export default function MemberDashboardPage() {
              MY
             </div>
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-wide text-[#0F172A]">
+              <p className="text-[14px] font-bold uppercase tracking-wide text-[#0F172A]">
                 mydasteran.id
               </p>
-              <p className="text-[10px] text-[#6B7B85]">
+              <p className="text-[11px] text-[#6B7B85]">
                 Member & Loyalty Dashboard
               </p>
             </div>
@@ -169,7 +169,7 @@ export default function MemberDashboardPage() {
 
           <button
             onClick={handleLogout}
-            className="rounded-full border border-[#C4E3DF] px-3 py-1 text-[11px] text-[#006B65] hover:bg-[#E7F3F2]"
+            className="rounded-full border border-[#C4E3DF] px-3 py-1 text-[14px] text-[#006B65] hover:bg-[#E7F3F2]"
           >
             Logout
           </button>
@@ -177,77 +177,71 @@ export default function MemberDashboardPage() {
 
         {/* NOTIF ERROR */}
         {errorMsg && (
-          <div className="rounded-2xl border border-[#F2B3B3] bg-[#FFF5F5] p-3 text-[11px] text-[#B43F3F]">
+          <div className="rounded-2xl border border-[#F2B3B3] bg-[#FFF5F5] p-3 text-[12px] text-[#B43F3F]">
             {errorMsg}
           </div>
         )}
 
         {/* WELCOME & LOYALTY SUMMARY */}
-        <section className="rounded-2xl border border-transparent bg-linear-to-br from-[#E7F8F7] via-white to-[#DFF4F1] p-5 shadow-md">
-          <p className="text-[18px] font-semibold tracking-wide text-[#0E918C]">
-            Selamat datang,{" "}
-            <span className="text-lg font-semibold text-[#0F172A] normal-case text-[18px]">
-              {customer.name}
-            </span>
-          </p>
+         <section className="rounded-2xl border border-transparent bg-linear-to-br from-[#E7F8F7] via-white to-[#DFF4F1] p-5 shadow-md">
+      <p className="text-[18px] font-semibold tracking-wide text-[#0E918C]">
+        Selamat datang,{" "}
+        <span className="text-[18px] font-semibold text-[#0F172A] normal-case">
+          {customer?.name}
+        </span>
+      </p>
 
-          <p className="mt-1 text-[12px] text-[#6B7B85]">{prettyPhone()}</p>
+      <p className="mt-1 text-[12px] text-[#6B7B85]">{prettyPhone?.()}</p>
 
-          <p className="mt-3 text-xs text-[#6B7B85]">
-            Di halaman ini Anda dapat melihat ringkasan poin loyalty, Level
-            member, dan riwayat aktivitas yang terhubung dengan - 
-           <span className=" font-bold text-[12px]">mydasteran.id.</span> 
-          </p>
+      <p className="mt-3 text-xs text-[#6B7B85]">
+        Di halaman ini Anda dapat melihat ringkasan poin loyalty, Level member, dan riwayat aktivitas
+        yang terhubung dengan - <span className="font-bold text-[12px]">mydasteran.id.</span>
+      </p>
 
-          {/* Ringkasan poin */}
-          {loyalty ? (
-            <div className="mt-4 grid grid-cols-3 gap-2 text-center text-[11px]">
-              <div className="rounded-xl bg-[#E1F4F2] px-2 py-3">
-                <p className="text-[10px] uppercase tracking-wide text-[#0E918C]">
-                  Point
-                </p>
-                <div className="mt-1 flex items-center justify-center gap-1 text-sm font-semibold text-[#0F172A]">
-                  <CircleDollarSignIcon className="h-4 w-4 text-[#ffc400]" />
-                  {formatNumber(loyalty.points_balance)}
-                </div>
-              </div>
-              <div className="rounded-xl bg-[#E7F3F2] px-2 py-3">
-                <p className="text-[10px] uppercase tracking-wide text-[#0E918C]">
-                  Level
-                </p>
-                <p className="mt-1 text-sm font-semibold text-[#0F172A]">
-                  {loyalty.tier || "-"}
-                </p>
-              </div>
-              <div className="rounded-xl bg-[#DEF4F1] px-2 py-3">
-                <p className="text-[10px] uppercase tracking-wide text-[#0E918C]">
-                  Total Belanja
-                </p>
-                <p className="mt-1 text-sm font-semibold text-[#0F172A]">
-                  Rp {formatNumber(loyalty.total_eligible_amount)}
-                </p>
-              </div>
+      {/* Ringkasan (2 card) */}
+      {loyalty ? (
+        <div className="mt-4 grid grid-cols-2 gap-2 text-center text-[12px]">
+          <div className="rounded-xl bg-[#E1F4F2] px-2 py-3">
+            <p className="text-[11px] uppercase tracking-wide text-[#0E918C]">Point</p>
+            <div className="mt-1 flex items-center justify-center gap-1 text-sm font-semibold text-[#0F172A]">
+              <CircleDollarSignIcon className="h-4 w-4 text-[#ffc400]" />
+              {formatNumber?.(loyalty.points_balance)}
             </div>
-          ) : (
-            <div className="mt-4 rounded-xl bg-[#E7F3F2] px-3 py-3 text-[11px] text-[#0F4F4C]">
-              Akun loyalty belum aktif untuk profile ini. Hubungi admin untuk
-              aktivasi atau cek ulang data customer.
-            </div>
-          )}
+          </div>
 
-          {/* Link syarat & ketentuan */}
-<div className="mt-4 text-[10px] text-[#6B7B85]">
-  Dengan menggunakan program member mydasteran.id, Anda menyetujui{' '}
-  <button
-    type="button"
-    onClick={() => setShowTerms(true)}
-    className="font-semibold text-[12px] text-[#0E918C] underline underline-offset-2"
-  >
-    Syarat & Ketentuan
-  </button>
-  .
-</div>
-        </section>
+          <div className="rounded-xl bg-[#DEF4F1] px-2 py-3">
+            <p className="text-[11px] uppercase tracking-wide text-[#0E918C]">Total Belanja</p>
+            <p className="mt-1 text-sm font-semibold text-[#0F172A]">
+              Rp {formatNumber?.(loyalty.total_eligible_amount)}
+            </p>
+          </div>
+        </div>
+      ) : (
+        <div className="mt-4 rounded-xl bg-[#E7F3F2] px-3 py-3 text-[12px] text-[#0F4F4C]">
+          Akun loyalty belum aktif untuk profile ini. Hubungi admin untuk aktivasi atau cek ulang data customer.
+        </div>
+      )}
+
+      
+
+      {/* Timeline level (di bawah) */}
+      {loyalty ? (
+  <TierProgress totalEligible={loyalty.total_eligible_amount} />
+) : null}
+
+{/* Link syarat & ketentuan */}
+      <div className="mt-4 text-[11px] text-[#6B7B85]">
+        Dengan menggunakan program member mydasteran.id, Anda menyetujui{" "}
+        <button
+          type="button"
+          onClick={() => setShowTerms?.(true)}
+          className="text-[12px] font-semibold text-[#0E918C]"
+        >
+          Syarat & Ketentuan
+        </button>
+        .
+      </div>
+    </section>
 
         {/* RIWAYAT LOYALTY */}
         <section className="rounded-2xl border border-[#C4E3DF] bg-white p-5 shadow-md">
@@ -257,13 +251,13 @@ export default function MemberDashboardPage() {
                 Point Cashback bulan ini
               </p>
             </div>
-            <span className="rounded-full bg-[#E1F4F2] px-2 py-1 text-[10px] text-[#0E918C]">
+            <span className="rounded-full bg-[#E1F4F2] px-2 py-1 text-[12px] text-[#0E918C]">
               {transactions.length} aktivitas
             </span>
           </div>
 
           {transactions.length === 0 ? (
-            <p className="text-[11px] text-[#6B7B85]">
+            <p className="text-[12px] text-[#6B7B85]">
               Belum ada aktivitas poin di bulan ini. Poin akan muncul setelah
               ada order yang memenuhi syarat.
             </p>
@@ -279,12 +273,12 @@ export default function MemberDashboardPage() {
                     className="flex items-start justify-between rounded-xl border border-[#E1F0EE] bg-[#F7FCFB] px-3 py-2.5"
                   >
                     <div className="flex flex-col">
-                      <p className="text-[11px] font-semibold text-[#0F172A]">
+                      <p className="text-[12px] font-semibold text-[#0F172A]">
                         {tx.type_label || tx.type}
                       </p>
 
                       {tx.description && (
-                        <p className="mt-0.5 text-[10px] text-[#6B7B85]">
+                        <p className="mt-0.5 text-[11px] text-[#6B7B85]">
                           {tx.description}
                         </p>
                       )}
@@ -319,7 +313,7 @@ export default function MemberDashboardPage() {
         </section>
       </div>
       <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-[#C4E3DF] bg-white/95 backdrop-blur">
-        <div className="mx-auto flex max-w-md items-center justify-between px-8 py-2.5 text-[10px]">
+        <div className="mx-auto flex max-w-md items-center justify-between px-8 py-2.5 text-[12px]">
           <Link
             href="/member/dashboard"
             className="flex flex-col items-center gap-0.5 text-[#6B7B85]"
@@ -356,7 +350,7 @@ export default function MemberDashboardPage() {
         <button
           type="button"
           onClick={() => setShowTerms(false)}
-          className="text-[11px] text-[#6B7B85] hover:text-[#0F172A]"
+          className="text-[12px] text-[#6B7B85] hover:text-[#0F172A]"
         >
           ✕
         </button>
@@ -398,7 +392,7 @@ export default function MemberDashboardPage() {
         <button
           type="button"
           onClick={() => setShowTerms(false)}
-          className="rounded-full bg-[#0E918C] px-4 py-1.5 text-[11px] font-semibold text-white hover:bg-[#0B746E]"
+          className="rounded-full bg-[#0E918C] px-4 py-1.5 text-[12px] font-semibold text-white hover:bg-[#0B746E]"
         >
           Saya mengerti
         </button>
@@ -410,3 +404,113 @@ export default function MemberDashboardPage() {
     </main>
   );
 }
+
+
+
+function formatRupiah(n = 0) {
+  return new Intl.NumberFormat("id-ID").format(Math.max(0, Math.floor(n)));
+}
+
+export function TierProgress({ totalEligible = 0 }) {
+  const T1 = 100_000_000; // Juragan
+  const T2 = 200_000_000; // Sultan
+
+  const tier =
+    totalEligible >= T2 ? "Sultan" : totalEligible >= T1 ? "Juragan" : "Agen";
+
+  // progress 0..1 untuk bar keseluruhan (0 -> 200jt)
+  const p = Math.min(totalEligible / T2, 1);
+
+  const nextTarget =
+    tier === "Agen" ? T1 : tier === "Juragan" ? T2 : null;
+
+  const remaining = nextTarget ? Math.max(nextTarget - totalEligible, 0) : 0;
+  const nextLabel = tier === "Agen" ? "Juragan" : tier === "Juragan" ? "Sultan" : null;
+
+  // posisi milestone: Agen(0), Juragan(0.5), Sultan(1)
+  const stops = [
+    { key: "Agen", pos: 0 },
+    { key: "Juragan", pos: 0.5 },
+    { key: "Sultan", pos: 1 },
+  ];
+
+  return (
+    <div className="mt-4 rounded-2xl bg-white/80 p-4 shadow-sm ring-1 ring-black/5">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-[12px] font-semibold text-[#0F172A]">
+            Level member
+          </p>
+          <p className="mt-0.5 text-[12px] text-slate-500">
+            Berdasarkan total belanja
+          </p>
+        </div>
+
+       <div className="inline-flex items-center gap-1.5 rounded-full bg-[#0E918C]/10 px-3 py-1 text-[12px] font-semibold text-[#0E918C]">
+  <span className="text-[14px] leading-none">
+    {tier === "Sultan" ? "👑" : "✨"}
+  </span>
+  {tier}
+</div>
+      </div>
+
+      {/* Bar */}
+      <div className="mt-4">
+        <div className="relative h-2 w-full rounded-full bg-slate-200">
+          <div
+            className="absolute left-0 top-0 h-2 rounded-full bg-[#0E918C]"
+            style={{ width: `${p * 100}%` }}
+          />
+          {/* Milestones */}
+          {stops.map((s) => {
+            const active = p >= s.pos;
+            const isCurrent = tier === s.key;
+
+            return (
+              <div
+                key={s.key}
+                className="absolute top-1/2 -translate-y-1/2"
+                style={{ left: `calc(${s.pos * 100}% - 10px)` }}
+              >
+                <div
+                  className={[
+                    "grid h-5 w-5 place-items-center rounded-full border bg-white",
+                    active ? "border-[#0E918C]" : "border-slate-300",
+                    isCurrent ? "ring-4 ring-[#0E918C]/15" : "",
+                  ].join(" ")}
+                >
+                  <div
+                    className={[
+                      "h-2.5 w-2.5 rounded-full",
+                      active ? "bg-[#0E918C]" : "bg-slate-300",
+                    ].join(" ")}
+                  />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Labels */}
+        <div className="mt-2 flex justify-between text-[12px]">
+          <span className={tier === "Agen" ? "font-semibold text-[#0E918C]" : "text-slate-500"}>Agen</span>
+          <span className={tier === "Juragan" ? "font-semibold text-[#0E918C]" : "text-slate-500"}>Juragan</span>
+          <span className={tier === "Sultan" ? "font-semibold text-[#0E918C]" : "text-slate-500"}>Sultan</span>
+        </div>
+
+        {/* Info “tinggal berapa lagi” */}
+        {nextTarget ? (
+          <div className="mt-3 rounded-xl bg-[#E7F8F7] px-3 py-2 text-[12px] text-[#0F4F4C]">
+            Tinggal <span className="font-semibold">Rp {formatRupiah(remaining)}</span> lagi untuk naik ke{" "}
+            <span className="font-semibold">{nextLabel}</span>.
+          </div>
+        ) : (
+          <div className="mt-3 rounded-xl bg-[#E7F8F7] px-3 py-2 text-[12px] text-[#0F4F4C]">
+            Kamu sudah di level tertinggi 🎉
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+

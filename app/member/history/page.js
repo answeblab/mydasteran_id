@@ -202,10 +202,10 @@ export default function MemberHistoryPage() {
         {/* TOP BAR */}
         <div className="flex items-center justify-between">
           <div className="flex flex-col">
-            <p className="text-[12px] font-bold uppercase tracking-wide text-[#0F172A]">
+            <p className="text-[14px] font-bold uppercase tracking-wide text-[#0F172A]">
               Riwayat Transaksi
             </p>
-            <p className="text-[10px] text-[#6B7B85]">
+            <p className="text-[12px] text-[#6B7B85]">
               {customer?.name} {prettyPhone() && `• ${prettyPhone()}`}
             </p>
           </div>
@@ -231,7 +231,7 @@ export default function MemberHistoryPage() {
             <button
               type="button"
               onClick={handleResetToCurrentMonth}
-              className="rounded-full border border-[#C4E3DF] px-2 py-1 text-[10px] text-[#0E918C] hover:bg-[#E7F3F2]"
+              className="rounded-full border border-[#C4E3DF] px-2 py-1 text-[12px] text-[#0E918C] hover:bg-[#E7F3F2]"
             >
               Bulan ini
             </button>
@@ -273,7 +273,7 @@ export default function MemberHistoryPage() {
           </div>
 
           {isFilterLoading && (
-            <p className="mt-2 text-[10px] text-[#0E918C]">
+            <p className="mt-2 text-[11px] text-[#0E918C]">
               Memuat data sesuai filter…
             </p>
           )}
@@ -285,7 +285,7 @@ export default function MemberHistoryPage() {
             <p className="text-sm font-semibold text-[#0F172A]">
               Riwayat order
             </p>
-            <span className="rounded-full bg-[#E1F4F2] px-2 py-1 text-[10px] text-[#0E918C]">
+            <span className="rounded-full bg-[#E1F4F2] px-2 py-1 text-[12px] text-[#0E918C]">
               {orders.length} order
             </span>
           </div>
@@ -311,11 +311,11 @@ export default function MemberHistoryPage() {
           <p className="font-mono text-[12px] text-[#0F172A]">
             {order.order_number}
           </p>
-          <p className="mt-0.5 text-[10px] text-[#8CA2AA]">
+          <p className="mt-0.5 text-[11px] text-[#8CA2AA]">
             {formatDate(order.created_at)}
           </p>
-          <div className="mt-1 flex flex-wrap gap-1 text-[9px]">
-            <span className="rounded-full bg-white px-2 py-0.5 text-[#0E918C]">
+          <div className="mt-1 flex flex-wrap gap-1 text-[11px]">
+            <span className="rounded-full bg-[#0E918C] px-2 py-0.5 text-[#ffffff]">
               {order.payment_status}
             </span>
             <span className="rounded-full bg-white px-2 py-0.5 text-[#6B7B85]">
@@ -327,7 +327,7 @@ export default function MemberHistoryPage() {
           <p className="text-sm font-semibold text-[#0F172A]">
             {formatCurrency(order.grand_total)}
           </p>
-          <div className="flex items-center text-[10px] text-[#0E918C]">
+          <div className="flex items-center text-[12px] text-[#0E918C]">
             <span className="mr-1">Lihat detail</span>
             <ChevronsDown className="h-3 w-3" />
           </div>
@@ -343,7 +343,7 @@ export default function MemberHistoryPage() {
 
       {/* BOTTOM NAVBAR */}
       <nav className="fixed inset-x-0 bottom-0 border-t border-[#C4E3DF] bg-white/95 backdrop-blur">
-        <div className="mx-auto flex max-w-md items-center justify-between px-8 py-2.5 text-[10px]">
+        <div className="mx-auto flex max-w-md items-center justify-between px-8 py-2.5 text-[12px]">
           {/* HOME */}
           <Link
             href="/member/dashboard"

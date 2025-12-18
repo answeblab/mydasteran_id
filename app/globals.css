@@ -251,3 +251,19 @@ html {
 .pt-safe {
   padding-top: env(safe-area-inset-top);
 }
+
+/* Input Field Styling - Ensure text is always visible */
+input[type="text"],
+input[type="tel"],
+input[type="email"],
+input[type="number"],
+input[type="password"],
+textarea,
+select {
+  color: #1f2937 !important; /* gray-800 - dark text for visibility */
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #9ca3af !important; /* gray-400 - lighter placeholder */
+}

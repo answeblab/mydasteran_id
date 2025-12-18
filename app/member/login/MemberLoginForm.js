@@ -47,12 +47,12 @@ export default function MemberLoginForm() {
       }
 
       if (!data || !data.fake_email) {
-        throw new Error('fake_email tidak ditemukan di response OTP')
+        throw new Error('data tidak ditemukan di response OTP')
       }
 
       setFakeEmail(data.fake_email)
       setStep('otp')
-      setMessage('Kode OTP sudah dikirim. Silakan cek SMS/WhatsApp Anda.')
+      setMessage('Kode OTP berhasil dikirim. Silakan cek SMS/WhatsApp Anda.')
     } catch (err) {
       setMessage(err.message || 'Gagal mengirim OTP')
     } finally {
@@ -127,10 +127,10 @@ export default function MemberLoginForm() {
           {/* Message */}
           {message && (
             <div className={`mb-6 p-4 rounded-xl border ${message.includes('berhasil')
-                ? 'bg-green-50 border-green-100 text-green-600'
-                : 'bg-red-50 border-red-100 text-red-600'
+              ? 'bg-white/95 border-green-200 text-green-700'
+              : 'bg-white/95 border-yellow-200 text-yellow-700'
               }`}>
-              <p className="text-sm">{message}</p>
+              <p className="text-sm font-medium">{message}</p>
             </div>
           )}
 
@@ -149,7 +149,7 @@ export default function MemberLoginForm() {
                     type="tel"
                     inputMode="numeric"
                     placeholder="812xxxxxxx"
-                    className="w-full pl-14 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[var(--gojek-green)] focus:border-transparent"
+                    className="w-full pl-14 pr-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[var(--gojek-green)] focus:border-transparent"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     required
@@ -182,7 +182,7 @@ export default function MemberLoginForm() {
                   maxLength={6}
                   inputMode="numeric"
                   placeholder="------"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl text-center text-2xl font-bold tracking-widest focus:outline-none focus:ring-2 focus:ring-[var(--gojek-green)] focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl text-center text-2xl font-bold tracking-widest text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[var(--gojek-green)] focus:border-transparent"
                   value={otp}
                   onChange={(e) => setOtp(e.target.value)}
                   required

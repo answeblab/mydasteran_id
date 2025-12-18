@@ -407,7 +407,7 @@ export default function MemberProfilePage() {
                       placeholder="Rumah, Kantor, dll"
                       value={label}
                       onChange={e => setLabel(e.target.value)}
-                      className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:border-[var(--gojek-green)] focus:ring-2 focus:ring-[var(--gojek-green)]/20 focus:outline-none"
+                      className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-[var(--gojek-green)] focus:ring-2 focus:ring-[var(--gojek-green)]/20 focus:outline-none"
                     />
                   </div>
                   <div>
@@ -416,7 +416,7 @@ export default function MemberProfilePage() {
                       placeholder="Nama lengkap"
                       value={recipientName}
                       onChange={e => setRecipientName(e.target.value)}
-                      className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:border-[var(--gojek-green)] focus:ring-2 focus:ring-[var(--gojek-green)]/20 focus:outline-none"
+                      className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-[var(--gojek-green)] focus:ring-2 focus:ring-[var(--gojek-green)]/20 focus:outline-none"
                     />
                   </div>
                   <div>
@@ -425,7 +425,7 @@ export default function MemberProfilePage() {
                       placeholder="6281xxxxxxxx"
                       value={phoneNumber}
                       onChange={e => setPhoneNumber(e.target.value)}
-                      className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:border-[var(--gojek-green)] focus:ring-2 focus:ring-[var(--gojek-green)]/20 focus:outline-none"
+                      className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-[var(--gojek-green)] focus:ring-2 focus:ring-[var(--gojek-green)]/20 focus:outline-none"
                     />
                   </div>
                   <div>
@@ -434,7 +434,7 @@ export default function MemberProfilePage() {
                       placeholder="12345"
                       value={postalCode}
                       onChange={e => setPostalCode(e.target.value)}
-                      className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:border-[var(--gojek-green)] focus:ring-2 focus:ring-[var(--gojek-green)]/20 focus:outline-none"
+                      className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-[var(--gojek-green)] focus:ring-2 focus:ring-[var(--gojek-green)]/20 focus:outline-none"
                     />
                   </div>
                   <div className="md:col-span-2">
@@ -444,7 +444,7 @@ export default function MemberProfilePage() {
                       rows={2}
                       value={addressLine1}
                       onChange={e => setAddressLine1(e.target.value)}
-                      className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:border-[var(--gojek-green)] focus:ring-2 focus:ring-[var(--gojek-green)]/20 focus:outline-none"
+                      className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-[var(--gojek-green)] focus:ring-2 focus:ring-[var(--gojek-green)]/20 focus:outline-none"
                     />
                   </div>
                   <div>
@@ -453,7 +453,7 @@ export default function MemberProfilePage() {
                       placeholder="Nama kota"
                       value={city}
                       onChange={e => setCity(e.target.value)}
-                      className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:border-[var(--gojek-green)] focus:ring-2 focus:ring-[var(--gojek-green)]/20 focus:outline-none"
+                      className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-[var(--gojek-green)] focus:ring-2 focus:ring-[var(--gojek-green)]/20 focus:outline-none"
                     />
                   </div>
                   <div>
@@ -462,7 +462,7 @@ export default function MemberProfilePage() {
                       placeholder="Nama provinsi"
                       value={province}
                       onChange={e => setProvince(e.target.value)}
-                      className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:border-[var(--gojek-green)] focus:ring-2 focus:ring-[var(--gojek-green)]/20 focus:outline-none"
+                      className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-[var(--gojek-green)] focus:ring-2 focus:ring-[var(--gojek-green)]/20 focus:outline-none"
                     />
                   </div>
                 </div>

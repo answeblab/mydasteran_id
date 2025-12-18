@@ -70,7 +70,7 @@ export default function ProductionCalculator() {
                         min="1"
                         value={quantity}
                         onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[var(--gojek-green)] focus:border-transparent"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[var(--gojek-green)] focus:border-transparent"
                     />
                 </div>
 
@@ -84,7 +84,7 @@ export default function ProductionCalculator() {
                         max="150"
                         value={chestWidth}
                         onChange={(e) => setChestWidth(parseInt(e.target.value) || 110)}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[var(--gojek-green)] focus:border-transparent"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[var(--gojek-green)] focus:border-transparent"
                     />
                     <p className="text-xs text-gray-500 mt-1">Standar: 110 cm</p>
                 </div>
@@ -99,7 +99,7 @@ export default function ProductionCalculator() {
                         max="120"
                         value={dressLength}
                         onChange={(e) => setDressLength(parseInt(e.target.value) || 90)}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[var(--gojek-green)] focus:border-transparent"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[var(--gojek-green)] focus:border-transparent"
                     />
                     <p className="text-xs text-gray-500 mt-1">Standar pendek: 90 cm</p>
                 </div>

@@ -1,30 +1,32 @@
-
 import "./globals.css";
 import { PwaRegister } from './_components/PwaRegister'
+import { Inter } from 'next/font/google'
 
-import { Plus_Jakarta_Sans } from 'next/font/google'
-
-const jakarta = Plus_Jakarta_Sans({
+const inter = Inter({
   subsets: ['latin'],
-  weight: ['300', '400', '500', '600', '700', '800'],
+  variable: '--font-inter',
+  display: 'swap',
 })
 
 export const metadata = {
- manifest: "/manifest.json",
-  
+  manifest: "/manifest.json",
+  title: "MyDasteran - Produksi Daster Berkualitas",
+  description: "Spesialis produksi daster custom dengan layanan white label dan kemitraan B2B. Siap orderan besar, tepat waktu, harga terjangkau.",
 }
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="id">
+    <html lang="en" className={inter.variable}>
       <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0, viewport-fit=cover" />
         <link rel="manifest" href="/manifest.json" />
-        <meta name="theme-color" content="#006B65" />
+        <meta name="theme-color" content="#0F4C3A" />
         <link rel="apple-touch-icon" href="/icons/icon-192.png" />
       </head>
-      <body className="bg-slate-50 antialiased"> <PwaRegister />{children}</body>
+      <body className="font-sans antialiased">
+        <PwaRegister />
+        {children}
+      </body>
     </html>
   )
 }
-

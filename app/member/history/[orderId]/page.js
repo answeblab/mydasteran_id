@@ -3,12 +3,13 @@
 import { useEffect, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase/client'
-import { ArrowLeft, ReceiptText,   CircleDollarSign, Truck } from 'lucide-react'
+import { ArrowLeft, Calendar, Package } from 'lucide-react'
+import MobileHeader from '@/components/mobile/MobileHeader'
 
 export default function OrderDetailPage() {
   const router = useRouter()
- const params = useParams()  
-const orderId = params?.orderId
+  const params = useParams()
+  const orderId = params?.orderId
 
   const [user, setUser] = useState(null)
   const [customer, setCustomer] = useState(null)
@@ -99,7 +100,7 @@ const orderId = params?.orderId
           .eq('customer_id', customerData.id)
           .single()
 
-         
+
         if (orderError || !orderData) {
           setErrorMsg('Order tidak ditemukan.')
           setLoading(false)
@@ -122,230 +123,188 @@ const orderId = params?.orderId
 
   if (loading) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-[#F4FBFA] px-4">
-        <p className="text-xs text-[#006B65]">Memuat detail order…</p>
-      </main>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-gray-200 border-t-[var(--gojek-green)] rounded-full animate-spin mx-auto"></div>
+          <p className="mt-4 text-gray-500">Memuat...</p>
+        </div>
+      </div>
     )
   }
 
   if (errorMsg) {
     return (
-      <main className="min-h-screen bg-[#F4FBFA] px-4 py-7">
-        <div className="mx-auto w-full max-w-md space-y-4">
-          <button
-            type="button"
-            onClick={() => router.back()}
-            className="flex items-center gap-1 text-[11px] text-[#0E918C]"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Kembali
-          </button>
-          <div className="rounded-2xl border border-[#F2B3B3] bg-[#FFF5F5] p-3 text-[11px] text-[#B43F3F]">
-            {errorMsg}
-          </div>
+      <div className="min-h-screen bg-gray-50 p-4">
+        <button
+          type="button"
+          onClick={() => router.back()}
+          className="flex items-center gap-2 text-[var(--gojek-green)] mb-4"
+        >
+          <ArrowLeft size={20} />
+          <span className="font-semibold">Kembali</span>
+        </button>
+        <div className="gojek-card bg-red-50 border-red-200">
+          <p className="text-sm text-red-700">{errorMsg}</p>
         </div>
-      </main>
+      </div>
     )
   }
 
   const items = Array.isArray(order.items) ? order.items : []
-  const earnedPoints = Number(order?.loyalty_points_earned ?? 0)
-const redeemedPoints = Number(order?.loyalty_redeem_points ?? 0)
-
-// kalau mau net (earn - redeem) per order:
-const netPoints = earnedPoints - redeemedPoints
-const hasNetPoints = netPoints !== 0
-const isMinus = netPoints < 0
 
   return (
-    <main className="min-h-screen bg-[#F4FBFA] px-4 py-7 pb-20">
-      <div className="mx-auto w-full max-w-md space-y-4">
-        {/* TOP BAR */}
-        <div className="flex items-center justify-between">
-          <button
-            type="button"
-            onClick={() => router.back()}
-            className="flex items-center gap-1 text-[11px] text-[#0E918C]"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Kembali
-          </button>
-        </div>
+    <div className="min-h-screen bg-gray-50 pb-20">
+      <MobileHeader title="Detail Pesanan" backUrl="/member/history" />
 
-    <section className="rounded-2xl border border-[#C4E3DF] bg-white p-4 shadow-md">
-  <div className="flex items-start justify-between">
-    {/* KIRI: icon + invoice + tanggal */}
-    <div className="flex items-center gap-3">
-      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#E1F4F2]">
-        <ReceiptText className="h-5 w-5 text-[#0E918C]" />
-      </div>
-
-      <div>
-        <p className="text-[12px] font-semibold text-[#0F172A]">
-          {order.order_number}
-        </p>
-        <p className="text-[11px] text-[#6B7B85]">
-          {formatDate(order.created_at)}
-        </p>
-      </div>
-    </div>
-
-    {/* KANAN: grand total + poin di bawahnya */}
-    <div className="flex flex-col items-end gap-1">
-      <p className="text-sm font-semibold text-[#0F172A]">
-        {formatCurrency(order.grand_total)}
-      </p>
-
-    </div>
-  </div>
-
-  {/* badges status di bawahnya */}
-  <div className="mt-3 flex flex-wrap gap-2 text-[11px]">
-    <span className="rounded-full bg-[#E1F4F2] px-2 py-1 text-[#0E918C]">
-      {order.payment_status}
-    </span>
-    <span className="rounded-full bg-[#E7F3F2] px-2 py-1 text-[#0F172A]">
-      {order.status}
-    </span>
-    <span className="rounded-full bg-white px-2 py-1 text-[#0E4F47]">
-      {order.source}
-    </span>
-    <span className="rounded-full bg-white px-2 py-1 text-[#7C4C0E]">
-      {order.order_type}
-    </span>
-  </div>
-</section>
-
-       {/* DETAIL ITEM - TABLE STYLE */}
-<section className="rounded-2xl border border-[#C4E3DF] bg-white p-4 text-[11px] shadow-md">
-  <p className="mb-3 text-sm font-semibold text-[#0F172A]">Detail Item</p>
-
-  {items.length === 0 ? (
-    <p className="text-[11px] text-[#6B7B85]">
-      Tidak ada detail item pada order ini.
-    </p>
-  ) : (
-    <div className="space-y-2">
-      {items.map((item, index) => (
-        <div
-          key={item.order_item_id}
-          className="flex items-center gap-3 rounded-xl border border-[#E1F0EE] bg-[#F7FCFB] p-3"
-        >
-          {/* Number bubble */}
-          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#0E918C] text-[12px] font-bold text-white">
-            {index + 1}
+      <div className="p-4 space-y-4 max-w-2xl mx-auto">
+        {/* Order Info Card */}
+        <div className="gojek-card">
+          <div className="flex items-start justify-between mb-3">
+            <div className="flex-1">
+              <p className="font-bold text-gray-900 mb-1">#{order.order_number}</p>
+              <div className="flex items-center gap-2 text-xs text-gray-500">
+                <Calendar size={12} />
+                <span>{formatDate(order.created_at)}</span>
+              </div>
+            </div>
+            <span className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${order.status === 'completed' || order.status === 'sent'
+                ? 'bg-green-100 text-green-700'
+                : order.status === 'cancelled'
+                  ? 'bg-red-100 text-red-700'
+                  : 'bg-yellow-100 text-yellow-700'
+              }`}>
+              {order.status === 'completed' ? '✅ Selesai' :
+                order.status === 'sent' ? '🚚 Dikirim' :
+                  order.status === 'cancelled' ? '❌ Dibatalkan' :
+                    order.status}
+            </span>
           </div>
 
-          {/* Product Icon Placeholder */}
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#E7F3F2]">
-            <ReceiptText className="h-5 w-5 text-[#0E918C]" />
-          </div>
-
-          {/* Item info */}
-          <div className="flex flex-1 flex-col">
-            <p className="font-medium text-[#0F172A]">{item.product_name}</p>
-            <p className="text-[12px] text-[#6B7B85]">
-              {item.quantity} × {formatCurrency(item.unit_price)}
-            </p>
-          </div>
-
-          {/* Subtotal */}
-          <div className="whitespace-nowrap text-right text-[11px] font-semibold text-[#0F172A]">
-            {formatCurrency(item.subtotal)}
+          {/* Badges */}
+          <div className="flex flex-wrap gap-2 text-xs">
+            <span className="px-3 py-1 bg-blue-50 text-blue-700 rounded-full font-semibold">
+              {order.payment_status === 'paid' ? '✓ Lunas' : order.payment_status}
+            </span>
+            <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full">
+              {order.source}
+            </span>
+            <span className="px-3 py-1 bg-purple-50 text-purple-700 rounded-full">
+              {order.order_type}
+            </span>
           </div>
         </div>
-      ))}
-    </div>
-  )}
-</section>
 
+        {/* Items Card */}
+        <div className="gojek-card">
+          <h3 className="font-bold text-gray-900 mb-4">Item Pesanan ({items.length})</h3>
 
-        {/* RINGKASAN ORDER - TABLE STYLE */}
-<section className="rounded-2xl border border-[#C4E3DF] bg-white p-4 text-[11px] shadow-md">
-  <p className="mb-3 text-sm font-semibold text-[#0F172A]">
-    Ringkasan pembayaran
-  </p>
+          {items.length === 0 ? (
+            <p className="text-sm text-gray-500">Tidak ada item</p>
+          ) : (
+            <div className="space-y-3">
+              {items.map((item, index) => (
+                <div
+                  key={item.order_item_id}
+                  className="flex items-start gap-3 pb-3 border-b border-gray-100 last:border-0 last:pb-0"
+                >
+                  {/* Number */}
+                  <div className="w-6 h-6 rounded-full bg-[var(--gojek-green)] text-white flex items-center justify-center text-xs font-bold flex-shrink-0">
+                    {index + 1}
+                  </div>
 
-  <div className="overflow-hidden rounded-xl border border-[#E1F0EE] bg-[#F7FCFB]">
-    <table className="w-full border-collapse text-[11px]">
-      <tbody>
-        <tr className="border-b border-[#E1F0EE]">
-          <td className="px-3 py-2 text-[#6B7B85]">Subtotal</td>
-          <td className="px-3 py-2 text-right font-medium text-[#0F172A]">
-            {formatCurrency(order.subtotal)}
-          </td>
-        </tr>
-        <tr className="border-b border-[#E1F0EE]">
-          <td className="px-3 py-2 text-[#6B7B85]">Ongkir</td>
-          <td className="px-3 py-2 text-right font-medium text-[#0F172A]">
-            {formatCurrency(order.shipping_cost)}
-          </td>
-        </tr>
-        <tr className="bg-white">
-          <td className="px-3 py-2 font-semibold text-[#0F172A]">Total</td>
-          <td className="px-3 py-2 text-right text-[12px] font-semibold text-[#0F172A]">
-            {formatCurrency(order.grand_total)}
-          </td>
-        </tr>
+                  {/* Icon */}
+                  <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0">
+                    <Package size={20} className="text-gray-500" />
+                  </div>
 
-        {(order.loyalty_points_earned > 0 ||
-          order.loyalty_redeem_points > 0) && (
-          <>
-            {order.loyalty_points_earned > 0 && (
-              <tr className="border-t border-[#E1F0EE]">
-                <td className="px-3 py-2 text-[#6B7B85]">Poin didapat</td>
-                <td className="px-3 py-2 text-right font-medium text-[#0E7A4E]">
-                  +{order.loyalty_points_earned} Xp
-                </td>
-              </tr>
+                  {/* Info */}
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-gray-900 text-sm">{item.product_name}</p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {item.quantity} × {formatCurrency(item.unit_price)}
+                    </p>
+                  </div>
+
+                  {/* Subtotal */}
+                  <div className="text-right flex-shrink-0">
+                    <p className="font-bold text-gray-900 text-sm">
+                      {formatCurrency(item.subtotal)}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Payment Summary */}
+        <div className="gojek-card">
+          <h3 className="font-bold text-gray-900 mb-4">Ringkasan Pembayaran</h3>
+
+          <div className="space-y-3">
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-600">Subtotal</span>
+              <span className="font-semibold text-gray-900">{formatCurrency(order.subtotal)}</span>
+            </div>
+
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-600">Ongkir</span>
+              <span className="font-semibold text-gray-900">{formatCurrency(order.shipping_cost)}</span>
+            </div>
+
+            <div className="border-t border-gray-100 pt-3"></div>
+
+            <div className="flex justify-between">
+              <span className="font-bold text-gray-900">Total</span>
+              <span className="font-bold text-gray-900 text-lg">{formatCurrency(order.grand_total)}</span>
+            </div>
+
+            {/* Loyalty Points */}
+            {(order.loyalty_points_earned > 0 || order.loyalty_redeem_points > 0) && (
+              <>
+                <div className="border-t border-gray-100 pt-3"></div>
+
+                {order.loyalty_points_earned > 0 && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Poin Didapat</span>
+                    <span className="font-semibold text-green-600">+{order.loyalty_points_earned} Xp</span>
+                  </div>
+                )}
+
+                {order.loyalty_redeem_points > 0 && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Poin Digunakan</span>
+                    <span className="font-semibold text-red-600">-{order.loyalty_redeem_points} pt</span>
+                  </div>
+                )}
+              </>
             )}
-            {order.loyalty_redeem_points > 0 && (
-              <tr>
-                <td  className="px-3 py-2 text-[#6B7B85]">Poin digunakan</td>
-                <td className="px-3 py-2 text-right font-medium text-[#C7504A]">
-                  -{order.loyalty_redeem_points} pt
-                </td>
-              </tr>
-            )}
-          </>
-        )}
 
-        <tr className="border-t border-[#E1F0EE]">
-          <td className="px-3 py-2 text-[10px] text-[#8CA2AA]">Metode Pembayaran</td>
-          <td className="px-3 py-2 text-right text-[12px] text-[#8CA2AA]">
-            {order.payment_method_name}
-          </td>
-        </tr>
-        <tr className="border-t border-[#E1F0EE]">
-  <td className="px-3 py-2 text-[10px] text-[#8CA2AA] flex items-center gap-1">
-    <Truck className="h-4 w-4" />
-    Kurir
-  </td>
-  <td className="px-3 py-2 text-right text-[11px] text-[#8CA2AA]">
-    {order.shipping_provider_name}
-  </td>
-</tr>
+            {/* Payment Method & Shipping */}
+            <div className="border-t border-gray-100 pt-3 space-y-2">
+              <div className="flex justify-between text-xs">
+                <span className="text-gray-500">Metode Pembayaran</span>
+                <span className="text-gray-700">{order.payment_method_name}</span>
+              </div>
 
-        <tr className="border-t border-[#E1F0EE]">
-          <td className="px-3 py-2 text-[10px] text-[#8CA2AA]">Dibuat</td>
-          <td className="px-3 py-2 text-right text-[12px] text-[#8CA2AA]">
-            {formatDate(order.created_at)}
-          </td>
-        </tr>
-        <tr>
-          <td className="px-3 py-2 text-[10px] text-[#8CA2AA]">Diupdate</td>
-          <td className="px-3 py-2 text-right text-[12px] text-[#8CA2AA]">
-            {formatDate(order.updated_at)}
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-</section>
+              <div className="flex justify-between text-xs">
+                <span className="text-gray-500">Kurir</span>
+                <span className="text-gray-700">{order.shipping_provider_name}</span>
+              </div>
 
+              <div className="flex justify-between text-xs">
+                <span className="text-gray-500">Dibuat</span>
+                <span className="text-gray-700">{formatDate(order.created_at)}</span>
+              </div>
 
-    
+              <div className="flex justify-between text-xs">
+                <span className="text-gray-500">Diupdate</span>
+                <span className="text-gray-700">{formatDate(order.updated_at)}</span>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-    </main>
+    </div>
   )
 }

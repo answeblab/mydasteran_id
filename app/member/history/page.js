@@ -6,12 +6,11 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabase/client";
 import {
   Calendar,
-  ChevronsDown,
-  CircleDollarSign,
-  ReceiptText,
-  House,
-  Clock3,
-  User2,
+  ChevronDown,
+  ShoppingBag,
+  Filter,
+  Search,
+  ArrowRight
 } from "lucide-react";
 
 export default function MemberHistoryPage() {
@@ -26,7 +25,6 @@ export default function MemberHistoryPage() {
   const now = new Date();
   const [selectedMonth, setSelectedMonth] = useState(now.getMonth() + 1); // 1–12
   const [selectedYear, setSelectedYear] = useState(now.getFullYear());
-  const [expandedOrderId, setExpandedOrderId] = useState(null);
   const [isFilterLoading, setIsFilterLoading] = useState(false);
 
   const formatDate = (isoString) => {
@@ -96,7 +94,7 @@ export default function MemberHistoryPage() {
 
         if (customerError || !customerData) {
           setErrorMsg(
-            "Data customer tidak ditemukan. Hubungi admin untuk menghubungkan akun Anda."
+            "Data customer tidak ditemukan. Hubungi admin."
           );
           setLoading(false);
           return;
@@ -173,79 +171,55 @@ export default function MemberHistoryPage() {
     await loadOrders(customer.id, year, month);
   };
 
-  const toggleExpand = (orderId) => {
-    setExpandedOrderId((prev) => (prev === orderId ? null : orderId));
-  };
-
-  const prettyPhone = () => {
-    const raw =
-      customer?.phone_number || user?.phone || user?.user_metadata?.phone || "";
-    if (!raw) return "";
-    const digits = raw.replace(/[^\d]/g, "");
-    if (!digits.startsWith("62")) return raw;
-    const base = digits.slice(2);
-    if (base.length < 9) return raw;
-    return `+62 ${base.slice(0, 3)}-${base.slice(3, 7)}-${base.slice(7)}`;
-  };
-
   if (loading) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-[#F4FBFA] px-4">
-        <p className="text-xs text-[#006B65]">Memuat riwayat order…</p>
-      </main>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-gray-200 border-t-[var(--gojek-green)] rounded-full animate-spin mx-auto"></div>
+          <p className="mt-4 text-gray-500">Memuat...</p>
+        </div>
+      </div>
     );
   }
 
   return (
-    <main className="min-h-screen bg-[#F4FBFA] px-4 py-7 pb-20">
-      <div className="mx-auto w-full max-w-md space-y-5">
-        {/* TOP BAR */}
-        <div className="flex items-center justify-between">
-          <div className="flex flex-col">
-            <p className="text-[14px] font-bold uppercase tracking-wide text-[#0F172A]">
-              Riwayat Transaksi
-            </p>
-            <p className="text-[12px] text-[#6B7B85]">
-              {customer?.name} {prettyPhone() && `• ${prettyPhone()}`}
-            </p>
-          </div>
-          <ReceiptText className="h-5 w-5 text-[#0E918C]" />
-        </div>
+    <div className="min-h-screen bg-gray-50 pb-20">
+      {/* Header */}
+      <div className="bg-white border-b border-gray-100 p-4">
+        <h1 className="text-xl font-bold text-gray-900">Riwayat Pesanan</h1>
+        <p className="text-sm text-gray-500 mt-1">Lihat semua transaksi Anda</p>
+      </div>
 
-        {/* NOTIF ERROR */}
+      <div className="p-4 space-y-4 max-w-2xl mx-auto">
+        {/* Error Message */}
         {errorMsg && (
-          <div className="rounded-2xl border border-[#F2B3B3] bg-[#FFF5F5] p-3 text-[12px] text-[#B43F3F]">
-            {errorMsg}
+          <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+            <p className="text-sm text-red-700">{errorMsg}</p>
           </div>
         )}
 
-        {/* FILTER BAR */}
-        <section className="rounded-2xl border border-[#C4E3DF] bg-white p-4 text-[12px] shadow-md">
-          <div className="mb-3 flex items-center justify-between gap-2">
+        {/* Filter Card */}
+        <div className="gojek-card">
+          <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <Calendar className="h-4 w-4 text-[#0E918C]" />
-              <p className="font-semibold text-[#0F172A]">
-                Filter periode transaksi
-              </p>
+              <Filter size={18} className="text-[var(--gojek-green)]" />
+              <h3 className="font-bold text-gray-900">Filter Periode</h3>
             </div>
             <button
               type="button"
               onClick={handleResetToCurrentMonth}
-              className="rounded-full border border-[#C4E3DF] px-2 py-1 text-[12px] text-[#0E918C] hover:bg-[#E7F3F2]"
+              className="text-xs font-semibold text-[var(--gojek-green)] hover:underline"
             >
-              Bulan ini
+              Bulan Ini
             </button>
           </div>
 
-          <div className="flex gap-2">
-            <div className="flex-1">
-              <label className="mb-1 block text-[12px] text-[#6B7B85]">
-                Bulan
-              </label>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="relative">
               <select
                 value={selectedMonth}
                 onChange={handleChangeMonth}
-                className="w-full rounded-xl border border-[#C4E3DF] bg-white px-2 py-1.5 text-[12px] text-[#0F172A] focus:border-[#0E918C] focus:outline-none"
+                className="w-full appearance-none bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-sm text-gray-900 focus:outline-none focus:border-[var(--gojek-green)] focus:ring-2 focus:ring-[var(--gojek-green)]/20 pr-10"
               >
                 {monthOptions.map((m) => (
                   <option key={m.value} value={m.value}>
@@ -253,15 +227,13 @@ export default function MemberHistoryPage() {
                   </option>
                 ))}
               </select>
+              <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
             </div>
-            <div className="w-24">
-              <label className="mb-1 block text-[12px] text-[#6B7B85]">
-                Tahun
-              </label>
+            <div className="relative">
               <select
                 value={selectedYear}
                 onChange={handleChangeYear}
-                className="w-full rounded-xl border border-[#C4E3DF] bg-white px-2 py-1.5 text-[12px] text-[#0F172A] focus:border-[#0E918C] focus:outline-none"
+                className="w-full appearance-none bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-sm text-gray-900 focus:outline-none focus:border-[var(--gojek-green)] focus:ring-2 focus:ring-[var(--gojek-green)]/20 pr-10"
               >
                 {yearOptions.map((y) => (
                   <option key={y} value={y}>
@@ -269,109 +241,90 @@ export default function MemberHistoryPage() {
                   </option>
                 ))}
               </select>
+              <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
             </div>
           </div>
-
           {isFilterLoading && (
-            <p className="mt-2 text-[11px] text-[#0E918C]">
-              Memuat data sesuai filter…
-            </p>
+            <p className="text-xs text-gray-500 mt-2 animate-pulse">Memperbarui...</p>
           )}
-        </section>
-
-        {/* ORDER LIST */}
-        <section className="rounded-2xl border border-[#C4E3DF] bg-white p-4 shadow-md">
-          <div className="mb-3 flex items-center justify-between">
-            <p className="text-sm font-semibold text-[#0F172A]">
-              Riwayat order
-            </p>
-            <span className="rounded-full bg-[#E1F4F2] px-2 py-1 text-[12px] text-[#0E918C]">
-              {orders.length} order
-            </span>
-          </div>
-
-          {orders.length === 0 ? (
-            <p className="text-[12px] text-[#6B7B85]">
-              Belum ada order pada periode ini. Silakan ubah filter bulan/tahun
-              untuk melihat riwayat lainnya.
-            </p>
-          ) : (
-            <div className="space-y-3">
-             {orders.map((order) => {
-  const items = Array.isArray(order.items) ? order.items : []
-
-  return (
-    <Link
-      key={order.order_id}
-      href={`/member/history/${order.order_id}`}
-      className="block rounded-xl border border-[#E1F0EE] bg-[#F7FCFB] px-3 py-2.5"
-    >
-      <div className="flex w-full items-center justify-between gap-2">
-        <div className="flex flex-col">
-          <p className="font-mono text-[12px] text-[#0F172A]">
-            {order.order_number}
-          </p>
-          <p className="mt-0.5 text-[11px] text-[#8CA2AA]">
-            {formatDate(order.created_at)}
-          </p>
-          <div className="mt-1 flex flex-wrap gap-1 text-[11px]">
-            <span className="rounded-full bg-[#0E918C] px-2 py-0.5 text-[#ffffff]">
-              {order.payment_status}
-            </span>
-            <span className="rounded-full bg-white px-2 py-0.5 text-[#6B7B85]">
-              {order.status}
-            </span>
-          </div>
         </div>
-        <div className="flex flex-col items-end gap-1">
-          <p className="text-sm font-semibold text-[#0F172A]">
-            {formatCurrency(order.grand_total)}
-          </p>
-          <div className="flex items-center text-[12px] text-[#0E918C]">
-            <span className="mr-1">Lihat detail</span>
-            <ChevronsDown className="h-3 w-3" />
-          </div>
+
+        {/* Order Count */}
+        <div className="flex items-center justify-between">
+          <h2 className="font-bold text-gray-900">Transaksi</h2>
+          <span className="bg-blue-100 text-blue-700 text-xs font-bold px-3 py-1 rounded-full">
+            {orders.length} Order
+          </span>
         </div>
-      </div>
-    </Link>
-  )
-})}
+
+        {/* Order List */}
+        {orders.length === 0 ? (
+          <div className="gojek-card text-center py-12">
+            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4 mx-auto">
+              <Search size={32} className="text-gray-400" />
             </div>
-          )}
-        </section>
+            <p className="font-bold text-gray-900">Tidak Ada Pesanan</p>
+            <p className="text-sm text-gray-500 mt-1">Coba ubah periode filter</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {orders.map((order) => (
+              <Link
+                key={order.order_id}
+                href={`/member/history/${order.order_id}`}
+                className="block gojek-card hover:shadow-lg transition-shadow"
+              >
+                {/* Header */}
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex-1">
+                    <p className="font-bold text-gray-900 mb-1">#{order.order_number}</p>
+                    <div className="flex items-center gap-2 text-xs text-gray-500">
+                      <Calendar size={12} />
+                      <span>{formatDate(order.created_at)}</span>
+                    </div>
+                  </div>
+                  <span className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${order.status === 'completed' || order.status === 'sent'
+                      ? 'bg-green-100 text-green-700'
+                      : order.status === 'cancelled'
+                        ? 'bg-red-100 text-red-700'
+                        : 'bg-yellow-100 text-yellow-700'
+                    }`}>
+                    {order.status === 'completed' ? '✅ Selesai' :
+                      order.status === 'sent' ? '🚚 Dikirim' :
+                        order.status === 'cancelled' ? '❌ Dibatalkan' :
+                          order.status}
+                  </span>
+                </div>
+
+                {/* Divider */}
+                <div className="border-t border-gray-100 my-3"></div>
+
+                {/* Payment Info */}
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs text-gray-500 mb-1">Total Pembayaran</p>
+                    <p className="font-bold text-gray-900 text-lg">{formatCurrency(order.grand_total)}</p>
+                  </div>
+                  <div className="text-right">
+                    <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${order.payment_status === 'paid'
+                        ? 'bg-green-100 text-green-700'
+                        : 'bg-orange-100 text-orange-700'
+                      }`}>
+                      {order.payment_status === 'paid' ? '✓ Lunas' : order.payment_status}
+                    </span>
+                  </div>
+                </div>
+
+                {/* View Details */}
+                <div className="mt-3 pt-3 border-t border-gray-100 flex items-center justify-between">
+                  <span className="text-sm text-[var(--gojek-green)] font-semibold">Lihat Detail</span>
+                  <ArrowRight size={16} className="text-[var(--gojek-green)]" />
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
       </div>
-
-      {/* BOTTOM NAVBAR */}
-      <nav className="fixed inset-x-0 bottom-0 border-t border-[#C4E3DF] bg-white/95 backdrop-blur">
-        <div className="mx-auto flex max-w-md items-center justify-between px-8 py-2.5 text-[12px]">
-          {/* HOME */}
-          <Link
-            href="/member/dashboard"
-            className="flex flex-col items-center gap-0.5 text-[#6B7B85]"
-          >
-            <House className="h-5 w-5" />
-            <span>Home</span>
-          </Link>
-
-          {/* RIWAYAT (aktif) */}
-          <Link
-            href="/member/history"
-            className="flex flex-col items-center gap-0.5 text-[#006B65]"
-          >
-            <Clock3 className="h-5 w-5" />
-            <span>Riwayat</span>
-          </Link>
-
-          {/* PROFIL (nanti bisa diarahkan ke /member/profile) */}
-          <Link
-            href="/member/profile"
-            className="flex flex-col items-center gap-0.5 text-[#6B7B85]"
-          >
-            <User2 className="h-5 w-5" />
-            <span>Profil</span>
-          </Link>
-        </div>
-      </nav>
-    </main>
+    </div>
   );
 }

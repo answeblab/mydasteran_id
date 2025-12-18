@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --webpack",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"
@@ -13,6 +13,7 @@
     "@supabase/supabase-js": "^2.87.1",
     "lucide-react": "^0.559.0",
     "next": "16.0.8",
+    "next-pwa": "^5.6.0",
     "react": "19.2.1",
     "react-dom": "19.2.1"
   },

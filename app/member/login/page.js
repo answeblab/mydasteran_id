@@ -1,4 +1,4 @@
-// app/member/login/page.jsx
+// app/member/login/page.js
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import MemberLoginForm from "./MemberLoginForm";

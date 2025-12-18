@@ -2,17 +2,19 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
 import { supabase } from '@/lib/supabase/client'
 import {
-  User2,
+  User,
   MapPin,
   Plus,
-  Home as HomeIcon,
-  Clock3,
-  HelpCircle,
   Phone,
-  Inbox,
+  X,
+  LogOut,
+  Edit,
+  Trash2,
+  HelpCircle,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react'
 
 export default function MemberProfilePage() {
@@ -24,9 +26,22 @@ export default function MemberProfilePage() {
   const [loading, setLoading] = useState(true)
   const [errorMsg, setErrorMsg] = useState(null)
 
+  // Delete Confirmation State
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [addressToDelete, setAddressToDelete] = useState(null);
+
+  // FAQ State
+  const [openFaqIndex, setOpenFaqIndex] = useState(null);
+  const toggleFaq = (index) => {
+    setOpenFaqIndex(openFaqIndex === index ? null : index);
+  };
+
   const [formOpen, setFormOpen] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [editingId, setEditingId] = useState(null)
+  const [deletingId, setDeletingId] = useState(null)
 
+  // Form State
   const [label, setLabel] = useState('')
   const [recipientName, setRecipientName] = useState('')
   const [phoneNumber, setPhoneNumber] = useState('')
@@ -38,11 +53,7 @@ export default function MemberProfilePage() {
   const [isDefault, setIsDefault] = useState(true)
 
   const prettyPhone = () => {
-    const raw =
-      customer?.phone_number ||
-      user?.phone ||
-      user?.user_metadata?.phone ||
-      ''
+    const raw = customer?.phone_number || ''
     if (!raw) return ''
     const digits = raw.replace(/[^\d]/g, '')
     if (!digits.startsWith('62')) return raw
@@ -51,25 +62,13 @@ export default function MemberProfilePage() {
     return `+62 ${base.slice(0, 3)}-${base.slice(3, 7)}-${base.slice(7)}`
   }
 
-  const formatPhoneDisplay = (raw) => {
-    if (!raw) return ''
-    const digits = raw.replace(/[^\d]/g, '')
-    if (digits.startsWith('62')) {
-      const base = digits.slice(2)
-      if (base.length < 9) return raw
-      return `+62 ${base.slice(0, 3)}-${base.slice(3, 7)}-${base.slice(7)}`
-    }
-    return raw
-  }
-
   useEffect(() => {
     const loadData = async () => {
       try {
         setLoading(true)
         setErrorMsg(null)
 
-        const { data: userData, error: userError } =
-          await supabase.auth.getUser()
+        const { data: userData, error: userError } = await supabase.auth.getUser()
 
         if (userError || !userData?.user) {
           router.replace('/member/login')
@@ -86,15 +85,12 @@ export default function MemberProfilePage() {
           .single()
 
         if (customerError || !customerData) {
-          setErrorMsg(
-            'Data customer tidak ditemukan. Hubungi admin untuk menghubungkan akun Anda.'
-          )
+          setErrorMsg('Data customer tidak ditemukan.')
           setLoading(false)
           return
         }
 
         setCustomer(customerData)
-
         await loadAddresses(customerData.id)
       } catch (err) {
         console.error(err)
@@ -107,24 +103,16 @@ export default function MemberProfilePage() {
       try {
         const { data, error } = await supabase
           .from('shipping_addresses')
-          .select(
-            'id, label, recipient_name, phone_number, address_line1, kecamatan, city, province, postal_code, is_default, created_at'
-          )
+          .select('*')
           .eq('customer_id', customerId)
           .order('is_default', { ascending: false })
           .order('created_at', { ascending: false })
 
-        if (error) {
-          console.error(error)
-          setErrorMsg('Gagal memuat daftar alamat.')
-          setAddresses([])
-        } else {
-          setAddresses(data || [])
-        }
+        if (error) throw error
+        setAddresses(data || [])
       } catch (err) {
         console.error(err)
-        setErrorMsg('Terjadi kesalahan saat memuat daftar alamat.')
-        setAddresses([])
+        setErrorMsg('Gagal memuat daftar alamat.')
       } finally {
         setLoading(false)
       }
@@ -158,7 +146,7 @@ export default function MemberProfilePage() {
       !province.trim() ||
       !postalCode.trim()
     ) {
-      setErrorMsg('Mohon lengkapi semua kolom wajib pada alamat.')
+      setErrorMsg('Mohon lengkapi semua kolom wajib.')
       return
     }
 
@@ -188,344 +176,490 @@ export default function MemberProfilePage() {
           is_default: isDefault,
         })
 
-      if (insertError) {
-        console.error(insertError)
-        setErrorMsg('Gagal menyimpan alamat baru.')
-      } else {
-        resetForm()
-        setFormOpen(false)
+      if (insertError) throw insertError
 
-        const { data, error } = await supabase
-          .from('shipping_addresses')
-          .select(
-            'id, label, recipient_name, phone_number, address_line1, kecamatan, city, province, postal_code, is_default, created_at'
-          )
-          .eq('customer_id', customer.id)
-          .order('is_default', { ascending: false })
-          .order('created_at', { ascending: false })
+      resetForm()
+      setFormOpen(false)
 
-        if (!error) {
-          setAddresses(data || [])
-        }
-      }
+      // Reload addresses
+      const { data } = await supabase
+        .from('shipping_addresses')
+        .select('*')
+        .eq('customer_id', customer.id)
+        .order('is_default', { ascending: false })
+        .order('created_at', { ascending: false })
+
+      if (data) setAddresses(data)
+
     } catch (err) {
       console.error(err)
-      setErrorMsg('Terjadi kesalahan saat menyimpan alamat.')
+      setErrorMsg('Gagal menyimpan alamat baru.')
     } finally {
       setSaving(false)
     }
   }
 
+  const handleEdit = (addr) => {
+    setEditingId(addr.id)
+    setLabel(addr.label)
+    setRecipientName(addr.recipient_name)
+    setPhoneNumber(addr.phone_number)
+    setAddressLine1(addr.address_line1)
+    setKecamatan(addr.kecamatan || '')
+    setCity(addr.city)
+    setProvince(addr.province)
+    setPostalCode(addr.postal_code)
+    setIsDefault(addr.is_default)
+    setFormOpen(true)
+  }
+
+  const handleUpdate = async (e) => {
+    e.preventDefault()
+    if (!customer || !editingId) return
+
+    if (
+      !label.trim() ||
+      !recipientName.trim() ||
+      !phoneNumber.trim() ||
+      !addressLine1.trim() ||
+      !city.trim() ||
+      !province.trim() ||
+      !postalCode.trim()
+    ) {
+      setErrorMsg('Mohon lengkapi semua kolom wajib.')
+      return
+    }
+
+    try {
+      setSaving(true)
+      setErrorMsg(null)
+
+      if (isDefault) {
+        await supabase
+          .from('shipping_addresses')
+          .update({ is_default: false })
+          .eq('customer_id', customer.id)
+          .neq('id', editingId)
+      }
+
+      const { error: updateError } = await supabase
+        .from('shipping_addresses')
+        .update({
+          label: label.trim(),
+          recipient_name: recipientName.trim(),
+          phone_number: phoneNumber.trim(),
+          address_line1: addressLine1.trim(),
+          kecamatan: kecamatan.trim() || null,
+          city: city.trim(),
+          province: province.trim(),
+          postal_code: postalCode.trim(),
+          is_default: isDefault,
+        })
+        .eq('id', editingId)
+
+      if (updateError) throw updateError
+
+      resetForm()
+      setFormOpen(false)
+      setEditingId(null)
+
+      // Reload addresses
+      const { data } = await supabase
+        .from('shipping_addresses')
+        .select('*')
+        .eq('customer_id', customer.id)
+        .order('is_default', { ascending: false })
+        .order('created_at', { ascending: false })
+
+      if (data) setAddresses(data)
+
+    } catch (err) {
+      console.error(err)
+      setErrorMsg('Gagal mengupdate alamat.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleDelete = async (addressId) => {
+    if (!customer) return
+
+    try {
+      setErrorMsg(null)
+
+      const { error: deleteError } = await supabase
+        .from('shipping_addresses')
+        .delete()
+        .eq('id', addressId)
+        .eq('customer_id', customer.id)
+
+      if (deleteError) throw deleteError
+
+      setDeletingId(null)
+
+      // Reload addresses
+      const { data } = await supabase
+        .from('shipping_addresses')
+        .select('*')
+        .eq('customer_id', customer.id)
+        .order('is_default', { ascending: false })
+        .order('created_at', { ascending: false })
+
+      if (data) setAddresses(data)
+
+    } catch (err) {
+      console.error(err)
+      setErrorMsg('Gagal menghapus alamat.')
+    }
+  }
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
+    router.replace('/member/login')
+  }
+
   if (loading) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-[#F4FBFA] px-4">
-        <p className="text-xs text-[#006B65]">Memuat profil…</p>
-      </main>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-gray-200 border-t-[var(--gojek-green)] rounded-full animate-spin mx-auto"></div>
+          <p className="mt-4 text-gray-500">Memuat...</p>
+        </div>
+      </div>
     )
   }
 
   return (
-    <main className="min-h-screen bg-[#F4FBFA] px-4 py-7 pb-20">
-      <div className="mx-auto w-full max-w-md space-y-5">
-        {/* TOP BAR */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[#006B65] text-[12px] font-bold text-white">
-              <User2 className="h-4 w-4" />
+    <div className="min-h-screen bg-gray-50 pb-20">
+      {/* Header */}
+      <div className="bg-white border-b border-gray-100 p-4">
+        <h1 className="text-xl font-bold text-gray-900">Profil</h1>
+        <p className="text-sm text-gray-500 mt-1">Kelola informasi akun Anda</p>
+      </div>
+
+      <div className="p-4 space-y-4 max-w-2xl mx-auto">
+        {/* Error Message */}
+        {errorMsg && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-center gap-2">
+            <X size={16} className="text-red-600" />
+            <p className="text-sm text-red-700">{errorMsg}</p>
+          </div>
+        )}
+
+        {/* Profile Card */}
+        <div className="gojek-card">
+          <div className="flex items-center gap-4">
+            <div className="w-16 h-16 bg-[var(--gojek-green)] rounded-full flex items-center justify-center text-white flex-shrink-0">
+              <User size={32} />
             </div>
-            <div>
-              <p className="text-[14px] font-bold uppercase tracking-wide text-[#0F172A]">
-                Profil Member
-              </p>
-              <p className="text-[12px] text-[#6B7B85]">
-                {customer?.name || 'Member'} {prettyPhone() && `• ${prettyPhone()}`}
-              </p>
+            <div className="flex-1 min-w-0">
+              <h2 className="font-bold text-gray-900 text-lg">{customer?.name}</h2>
+              <div className="flex items-center gap-2 text-sm text-gray-500 mt-1">
+                <Phone size={14} />
+                <span>{prettyPhone()}</span>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* NOTIF ERROR */}
-        {errorMsg && (
-          <div className="rounded-2xl border border-[#F2B3B3] bg-[#FFF5F5] p-3 text-[12px] text-[#B43F3F]">
-            {errorMsg}
-          </div>
-        )}
-
-        {/* DAFTAR ALAMAT */}
-        <section className="rounded-2xl border border-[#C4E3DF] bg-white p-4 text-[12px] shadow-md">
-          <div className="mb-3 flex items-center justify-between">
+        {/* Addresses Section */}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <MapPin className="h-4 w-4 text-[#0E918C]" />
-              <p className="text-sm font-semibold text-[#0F172A]">
-                Alamat pengiriman
-              </p>
+              <MapPin size={20} className="text-[var(--gojek-green)]" />
+              <h3 className="font-bold text-gray-900">Alamat Pengiriman</h3>
             </div>
             <button
-              type="button"
-              onClick={() => setFormOpen((prev) => !prev)}
-              className="inline-flex items-center gap-1 rounded-full border border-[#C4E3DF] px-2 py-1 text-[12px] text-[#0E918C] hover:bg-[#E7F3F2]"
+              onClick={() => {
+                setFormOpen(!formOpen)
+                if (!formOpen) resetForm()
+              }}
+              className="flex items-center gap-1.5 bg-[var(--gojek-green)] text-white text-xs font-bold px-3 py-2 rounded-lg hover:opacity-90 transition-opacity"
             >
-              <Plus className="h-3 w-3" />
-              {formOpen ? 'Tutup form' : 'Alamat baru'}
+              <Plus size={16} />
+              Tambah
             </button>
           </div>
 
+          {/* Add Address Form */}
+          {formOpen && (
+            <div className="gojek-card border-2 border-[var(--gojek-green)]">
+              <form onSubmit={editingId ? handleUpdate : handleSubmitAddress} className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <h4 className="font-bold text-gray-900">{editingId ? 'Edit Alamat' : 'Alamat Baru'}</h4>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFormOpen(false)
+                      setEditingId(null)
+                      resetForm()
+                    }}
+                    className="text-gray-400 hover:text-red-500"
+                  >
+                    <X size={18} />
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs font-semibold text-gray-700 mb-1 block">Label</label>
+                    <input
+                      placeholder="Rumah, Kantor, dll"
+                      value={label}
+                      onChange={e => setLabel(e.target.value)}
+                      className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:border-[var(--gojek-green)] focus:ring-2 focus:ring-[var(--gojek-green)]/20 focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-gray-700 mb-1 block">Nama Penerima</label>
+                    <input
+                      placeholder="Nama lengkap"
+                      value={recipientName}
+                      onChange={e => setRecipientName(e.target.value)}
+                      className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:border-[var(--gojek-green)] focus:ring-2 focus:ring-[var(--gojek-green)]/20 focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-gray-700 mb-1 block">No. Telepon</label>
+                    <input
+                      placeholder="6281xxxxxxxx"
+                      value={phoneNumber}
+                      onChange={e => setPhoneNumber(e.target.value)}
+                      className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:border-[var(--gojek-green)] focus:ring-2 focus:ring-[var(--gojek-green)]/20 focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-gray-700 mb-1 block">Kode Pos</label>
+                    <input
+                      placeholder="12345"
+                      value={postalCode}
+                      onChange={e => setPostalCode(e.target.value)}
+                      className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:border-[var(--gojek-green)] focus:ring-2 focus:ring-[var(--gojek-green)]/20 focus:outline-none"
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="text-xs font-semibold text-gray-700 mb-1 block">Alamat Lengkap</label>
+                    <textarea
+                      placeholder="Jalan, nomor rumah, RT/RW, dll"
+                      rows={2}
+                      value={addressLine1}
+                      onChange={e => setAddressLine1(e.target.value)}
+                      className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:border-[var(--gojek-green)] focus:ring-2 focus:ring-[var(--gojek-green)]/20 focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-gray-700 mb-1 block">Kota/Kabupaten</label>
+                    <input
+                      placeholder="Nama kota"
+                      value={city}
+                      onChange={e => setCity(e.target.value)}
+                      className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:border-[var(--gojek-green)] focus:ring-2 focus:ring-[var(--gojek-green)]/20 focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-gray-700 mb-1 block">Provinsi</label>
+                    <input
+                      placeholder="Nama provinsi"
+                      value={province}
+                      onChange={e => setProvince(e.target.value)}
+                      className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:border-[var(--gojek-green)] focus:ring-2 focus:ring-[var(--gojek-green)]/20 focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={isDefault}
+                    onChange={e => setIsDefault(e.target.checked)}
+                    className="rounded text-[var(--gojek-green)] focus:ring-[var(--gojek-green)]"
+                  />
+                  <span className="text-sm text-gray-900 font-medium">Jadikan alamat utama</span>
+                </label>
+
+                <div className="flex justify-end gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setFormOpen(false)}
+                    className="px-4 py-2 rounded-lg text-sm text-gray-600 font-medium hover:bg-gray-100"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={saving}
+                    className="px-6 py-2 rounded-lg bg-[var(--gojek-green)] text-white text-sm font-bold hover:opacity-90 disabled:opacity-50"
+                  >
+                    {saving ? "Menyimpan..." : editingId ? "Update" : "Simpan"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
+
+          {/* Address List */}
           {addresses.length === 0 ? (
-            <p className="text-[12px] text-[#6B7B85]">
-              Belum ada alamat pengiriman yang tersimpan. Tambahkan alamat baru
-              untuk memudahkan proses order berikutnya.
-            </p>
+            <div className="gojek-card text-center py-8">
+              <MapPin size={32} className="text-gray-300 mx-auto mb-2" />
+              <p className="text-sm text-gray-500">Belum ada alamat tersimpan</p>
+            </div>
           ) : (
-            <div className="space-y-2">
+            <div className="space-y-3">
               {addresses.map((addr) => (
                 <div
                   key={addr.id}
-                  className="rounded-xl border border-[#E1F0EE] bg-[#F7FCFB] p-3"
+                  className={`p-4 rounded-lg border ${addr.is_default
+                    ? 'bg-green-50 border-green-200'
+                    : 'bg-white border-gray-200'
+                    }`}
                 >
-                  <div className="mb-1 flex items-center justify-between">
-                    <p className="text-[12px] font-semibold text-[#0F172A]">
-                      {addr.label}
-                    </p>
-                    {addr.is_default && (
-                      <span className="rounded-full bg-[#0E918C]/10 px-2 py-0.5 text-[9px] font-medium text-[#0E918C]">
-                        Utama
-                      </span>
-                    )}
+                  <div className="flex justify-between items-start mb-2">
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-gray-900">{addr.label}</span>
+                      {addr.is_default && (
+                        <span className="text-xs font-bold bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
+                          UTAMA
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => handleEdit(addr)}
+                        className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                        title="Edit"
+                      >
+                        <Edit size={16} />
+                      </button>
+                      <button
+                        onClick={() => setDeletingId(addr.id)}
+                        className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        title="Hapus"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
                   </div>
-                  <p className="text-[12px] font-medium text-[#0F172A]">
-                    {addr.recipient_name}
+
+                  <p className="text-sm text-gray-900 font-medium mb-1">
+                    {addr.recipient_name} <span className="text-gray-400">|</span> {addr.phone_number}
                   </p>
-                  <p className="text-[12px] text-[#6B7B85]">
-                    {formatPhoneDisplay(addr.phone_number)}
-                  </p>
-                  <p className="mt-1 text-[12px] text-[#4B5563]">
-                    {addr.address_line1}
-                    {addr.kecamatan && `, Kec. ${addr.kecamatan}`}
-                    {`, ${addr.city}, ${addr.province}, ${addr.postal_code}`}
+                  <p className="text-xs text-gray-600 leading-relaxed">
+                    {addr.address_line1}, {addr.kecamatan ? `${addr.kecamatan}, ` : ''}{addr.city}, {addr.province} {addr.postal_code}
                   </p>
                 </div>
               ))}
             </div>
           )}
+        </div>
 
-          {/* FORM TAMBAH ALAMAT */}
-          {formOpen && (
-            <form onSubmit={handleSubmitAddress} className="mt-4 space-y-2">
-              <p className="text-[12px] font-semibold text-[#0F172A]">
-                Tambah alamat baru
+        {/* Delete Confirmation Modal */}
+        {deletingId && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-lg p-6 max-w-sm w-full">
+              <h3 className="font-bold text-gray-900 text-lg mb-2">Hapus Alamat?</h3>
+              <p className="text-sm text-gray-600 mb-6">
+                Alamat yang sudah dihapus tidak dapat dikembalikan.
               </p>
 
-              <div className="grid grid-cols-2 gap-2">
-                <div className="col-span-2">
-                  <label className="mb-1 block text-[12px] text-[#6B7B85]">
-                    Label alamat (contoh: Rumah, Toko)
-                  </label>
-                  <input
-                    value={label}
-                    onChange={(e) => setLabel(e.target.value)}
-                    className="w-full rounded-xl border border-[#C4E3DF] bg-white px-3 py-2 text-[12px] text-[#0F172A] focus:border-[#0E918C] focus:outline-none"
-                  />
-                </div>
-                <div className="col-span-2">
-                  <label className="mb-1 block text-[12px] text-[#6B7B85]">
-                    Nama penerima
-                  </label>
-                  <input
-                    value={recipientName}
-                    onChange={(e) => setRecipientName(e.target.value)}
-                    className="w-full rounded-xl border border-[#C4E3DF] bg-white px-3 py-2 text-[12px] text-[#0F172A] focus:border-[#0E918C] focus:outline-none"
-                  />
-                </div>
-                <div className="col-span-2">
-                  <label className="mb-1 block text-[12px] text-[#6B7B85]">
-                    Nomor telepon
-                  </label>
-                  <input
-                    value={phoneNumber}
-                    onChange={(e) => setPhoneNumber(e.target.value)}
-                    className="w-full rounded-xl border border-[#C4E3DF] bg-white px-3 py-2 text-[12px] text-[#0F172A] focus:border-[#0E918C] focus:outline-none"
-                    placeholder="Contoh: 62812xxxxxxx"
-                  />
-                </div>
-                <div className="col-span-2">
-                  <label className="mb-1 block text-[12px] text-[#6B7B85]">
-                    Alamat lengkap
-                  </label>
-                  <textarea
-                    value={addressLine1}
-                    onChange={(e) => setAddressLine1(e.target.value)}
-                    className="w-full rounded-xl border border-[#C4E3DF] bg-white px-3 py-2 text-[12px] text-[#0F172A] focus:border-[#0E918C] focus:outline-none"
-                    rows={2}
-                  />
-                </div>
-                <div>
-                  <label className="mb-1 block text-[12px] text-[#6B7B85]">
-                    Kecamatan
-                  </label>
-                  <input
-                    value={kecamatan}
-                    onChange={(e) => setKecamatan(e.target.value)}
-                    className="w-full rounded-xl border border-[#C4E3DF] bg-white px-3 py-2 text-[12px] text-[#0F172A] focus:border-[#0E918C] focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="mb-1 block text-[12px] text-[#6B7B85]">
-                    Kota / Kab.
-                  </label>
-                  <input
-                    value={city}
-                    onChange={(e) => setCity(e.target.value)}
-                    className="w-full rounded-xl border border-[#C4E3DF] bg-white px-3 py-2 text-[12px] text-[#0F172A] focus:border-[#0E918C] focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="mb-1 block text-[12px] text-[#6B7B85]">
-                    Provinsi
-                  </label>
-                  <input
-                    value={province}
-                    onChange={(e) => setProvince(e.target.value)}
-                    className="w-full rounded-xl border border-[#C4E3DF] bg-white px-3 py-2 text-[12px] text-[#0F172A] focus:border-[#0E918C] focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="mb-1 block text-[12px] text-[#6B7B85]">
-                    Kode pos
-                  </label>
-                  <input
-                    value={postalCode}
-                    onChange={(e) => setPostalCode(e.target.value)}
-                    className="w-full rounded-xl border border-[#C4E3DF] bg-white px-3 py-2 text-[12px] text-[#0F172A] focus:border-[#0E918C] focus:outline-none"
-                  />
-                </div>
-              </div>
-
-              <label className="mt-1 flex items-center gap-2 text-[12px] text-[#0F172A]">
-                <input
-                  type="checkbox"
-                  checked={isDefault}
-                  onChange={(e) => setIsDefault(e.target.checked)}
-                  className="h-3 w-3 rounded border-[#C4E3DF] text-[#0E918C] focus:ring-[#0E918C]"
-                />
-                Jadikan sebagai alamat utama
-              </label>
-
-              <div className="mt-2 flex justify-end gap-2">
+              <div className="flex gap-3">
                 <button
-                  type="button"
-                  onClick={() => {
-                    setFormOpen(false)
-                    resetForm()
-                  }}
-                  className="rounded-full border border-[#C4E3DF] px-3 py-1.5 text-[12px] text-[#6B7B85] hover:bg-[#E7F3F2]"
+                  onClick={() => setDeletingId(null)}
+                  className="flex-1 px-4 py-2 rounded-lg text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200"
                 >
                   Batal
                 </button>
                 <button
-                  type="submit"
-                  disabled={saving}
-                  className="rounded-full bg-[#0E918C] px-4 py-1.5 text-[12px] font-semibold text-white hover:bg-[#0B746E] disabled:opacity-60"
+                  onClick={() => handleDelete(deletingId)}
+                  className="flex-1 px-4 py-2 rounded-lg text-sm font-bold text-white bg-red-600 hover:bg-red-700"
                 >
-                  {saving ? 'Menyimpan…' : 'Simpan alamat'}
+                  Hapus
                 </button>
               </div>
-            </form>
-          )}
-        </section>
+            </div>
+          </div>
+        )}
 
-   {/* FAQ & BANTUAN */}
-<section className="rounded-2xl border border-[#C4E3DF] bg-white p-4 text-[12px] shadow-md">
-  <div className="mb-2 flex items-center gap-2">
-    <HelpCircle className="h-4 w-4 text-[#0E918C]" />
-    <p className="text-sm font-semibold text-[#0F172A]">FAQ & Bantuan</p>
-  </div>
+        {/* Support Card */}
+        <div className="bg-gradient-to-br from-[var(--gojek-green)] to-green-600 rounded-lg p-6 text-white">
+          <h3 className="text-lg font-bold mb-2">Butuh Bantuan?</h3>
+          <p className="text-sm text-green-50 mb-4">
+            Hubungi admin kami via WhatsApp untuk bantuan terkait akun, pesanan, atau loyalty points.
+          </p>
 
-  <div className="space-y-2">
-    <div>
-      <p className="text-[12px] font-medium text-[#0F172A]">
-        1. Bisakah saya menyimpan lebih dari satu alamat?
-      </p>
-      <p className="text-[12px] text-[#6B7B85]">
-        Bisa. Anda dapat menyimpan beberapa alamat (rumah, toko, gudang, dll).
-      </p>
-    </div>
-<div>
-      <p className="text-[12px] font-medium text-[#0F172A]">
-        2. apakah poin cashback bisa hangus?
-      </p>
-      <p className="text-[12px] text-[#6B7B85]">
-        Point cashback bisa hangus dalam 2 bulan (terhitung sejak bulan transaksi dan berakhir pada akhir bulan berikutnya)
-      </p>
-    </div>
-    <div>
-      <p className="text-[12px] font-medium text-[#0F172A]">
-        3. Bagaimana jika no WhatsApp saya hilang atau ganti?
-      </p>
-      <p className="text-[12px] text-[#6B7B85]">
-        Hubungi admin agar akun anda dapat diperbarui.
-      </p>
-    </div>
-    
-  </div>
-
-  {/* WhatsApp kontak admin */}
-  <div className="mt-4 rounded-xl bg-[#E7F3F2] p-3 text-[#0F4F4C]">
-    <p className="mb-2 flex items-center gap-1 text-[12px] font-semibold">
-      <Phone className="h-3 w-3" />
-      Bantuan langsung
-    </p>
-
-    <a
-      href="https://wa.me/6282234707911?text=Halo%20admin%2C%20saya%20butuh%20bantuan%20terkait%20akun%20member."
-      target="_blank"
-      rel="noopener noreferrer"
-      className="flex w-full items-center justify-center gap-2 rounded-full bg-[#25D366] py-2 text-[12px] font-semibold text-white shadow hover:bg-[#1ebe5c] transition"
-    >
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="14"
-        height="14"
-        viewBox="0 0 24 24"
-        fill="currentColor"
-      >
-        <path d="M20.52 3.48A11.78 11.78 0 0 0 12 0a11.85 11.85 0 0 0-10.3 17.94L0 24l6.28-1.64A11.86 11.86 0 0 0 12 24a11.73 11.73 0 0 0 8.48-3.52A11.73 11.73 0 0 0 24 12a11.73 11.73 0 0 0-3.48-8.52zM12 21.67a9.72 9.72 0 0 1-4.94-1.35l-.35-.21-3.73.97 1-3.64-.24-.37A9.76 9.76 0 0 1 2.33 12a9.67 9.67 0 1 1 9.67 9.67zm5.41-7.26c-.3-.15-1.76-.87-2-.97s-.47-.15-.67.15-.77.97-.94 1.17-.35.22-.65.07a7.93 7.93 0 0 1-2.34-1.44 8.9 8.9 0 0 1-1.64-2c-.17-.3 0-.46.13-.61s.3-.37.45-.55a2 2 0 0 0 .3-.5.58.58 0 0 0-.03-.57c-.07-.15-.67-1.61-.92-2.21s-.5-.52-.67-.53h-.57c-.18 0-.55.07-.84.39s-1.1 1.07-1.1 2.61 1.12 3 1.27 3.2a13.1 13.1 0 0 0 4.39 4.39 14.85 14.85 0 0 0 1.47.54 3.5 3.5 0 0 0 1.6.1c.49-.07 1.76-.72 2-1.41s.24-1.29.17-1.41-.27-.2-.57-.35z"/>
-      </svg>
-
-      Hubungi via WhatsApp
-    </a>
-  </div>
-</section>
-
-      </div>
-
-      {/* BOTTOM NAVBAR */}
-      <nav className="fixed inset-x-0 bottom-0 border-t border-[#C4E3DF] bg-white/95 backdrop-blur">
-        <div className="mx-auto flex max-w-md items-center justify-between px-8 py-2.5 text-[12px]">
-          <Link
-            href="/member/dashboard"
-            className="flex flex-col items-center gap-0.5 text-[#6B7B85]"
+          <a
+            href="https://wa.me/6282234707911?text=Halo%20admin%2C%20saya%20butuh%20bantuan%20terkait%20akun%20member."
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 bg-white text-[var(--gojek-green)] font-bold px-5 py-3 rounded-lg hover:bg-gray-50 transition-colors"
           >
-            <HomeIcon className="h-5 w-5" />
-            <span>Home</span>
-          </Link>
-
-          <Link
-            href="/member/history"
-            className="flex flex-col items-center gap-0.5 text-[#6B7B85]"
-          >
-            <Clock3 className="h-5 w-5" />
-            <span>Riwayat</span>
-          </Link>
-
-          <Link
-            href="/member/profile"
-            className="flex flex-col items-center gap-0.5 text-[#006B65]"
-          >
-            <User2 className="h-5 w-5" />
-            <span>Profil</span>
-          </Link>
+            <Phone size={18} />
+            Hubungi Support
+          </a>
         </div>
-      </nav>
-    </main>
+
+        {/* FAQ Section */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 mt-6">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="bg-blue-50 p-2 rounded-full">
+              <HelpCircle size={20} className="text-blue-600" />
+            </div>
+            <h2 className="font-bold text-gray-900">FAQ & Bantuan</h2>
+          </div>
+
+          <div className="space-y-3">
+            {[
+              {
+                q: "Bagaimana cara melakukan order?",
+                a: "Saat ini pemesanan dilakukan manual melalui WhatsApp Admin. Silakan pilih produk di katalog dan hubungi admin untuk order. Website digunakan untuk cek status pesanan member."
+              },
+              {
+                q: "Berapa lama proses Pre-Order?",
+                a: "Estimasi produksi adalah 7-10 hari kerja sejak order dikonfirmasi. Minimum order (MOQ) adalah 50 pcs per model."
+              },
+              {
+                q: "Bagaimana cara konfirmasi pembayaran?",
+                a: "Untuk saat ini konfirmasi pembayaran dilakukan manual via WhatsApp admin dengan mengirimkan bukti transfer."
+              },
+              {
+                q: "Apakah bisa retur barang?",
+                a: "Retur hanya diterima jika ada cacat produksi atau kesalahan kirim model/size. Wajib menyertakan video unboxing."
+              }
+            ].map((faq, index) => (
+              <div key={index} className="border border-gray-100 rounded-lg overflow-hidden">
+                <button
+                  onClick={() => toggleFaq(index)}
+                  className="w-full flex justify-between items-center p-4 bg-gray-50 hover:bg-gray-100 transition-colors text-left"
+                >
+                  <span className="font-medium text-sm text-gray-800">{faq.q}</span>
+                  {openFaqIndex === index ? (
+                    <ChevronUp size={16} className="text-gray-500" />
+                  ) : (
+                    <ChevronDown size={16} className="text-gray-500" />
+                  )}
+                </button>
+                {openFaqIndex === index && (
+                  <div className="p-4 bg-white border-t border-gray-100 text-sm text-gray-600 leading-relaxed animate-in slide-in-from-top-2 duration-200">
+                    {faq.a}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Logout Button */}
+        <div className="pt-6 pb-10">
+          <button
+            onClick={() => setShowDeleteConfirm(true)}
+            className="w-full bg-red-50 text-red-600 font-bold py-3.5 rounded-xl border border-red-100 active:scale-[0.98] transition-transform flex items-center justify-center gap-2"
+          >
+            <LogOut size={18} />
+            Keluar Aplikasi
+          </button>
+        </div>
+      </div>
+    </div>
   )
 }

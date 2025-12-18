@@ -1,15 +1,88 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-inter);
+  --font-serif: var(--font-playfair);
+
+  --color-primary-50: #f2fbf9;
+  --color-primary-100: #d1f4ee;
+  --color-primary-200: #a3e8de;
+  --color-primary-300: #6cd6c8;
+  --color-primary-400: #3abeb0;
+  --color-primary-500: #1fa296;
+  --color-primary-600: #15837a;
+  --color-primary-700: #126963;
+  --color-primary-800: #125450;
+  --color-primary-900: #134643;
+  --color-primary-950: #062a29;
+
+  --color-gold-50: #fbf9f2;
+  --color-gold-100: #f6f1df;
+  --color-gold-200: #ede2c0;
+  --color-gold-300: #e2ce95;
+  --color-gold-400: #d5b669;
+  --color-gold-500: #c5a059;
+  --color-gold-600: #a98144;
+  --color-gold-700: #886238;
+  --color-gold-800: #714f32;
+  --color-gold-900: #5e412d;
+  --color-gold-950: #352316;
+
+  --color-cream-50: #fefdfb;
+  --color-cream-100: #fdfaf5;
+  --color-cream-200: #fcf6ec;
+  --color-cream-300: #f9f0e0;
+  --color-cream-400: #f4e3cd;
+  --color-cream-500: #efcca4;
+  --color-cream-600: #e5b383;
+}
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 3.9%;
+    --primary: 0 0% 9%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 0 0% 96.1%;
+    --secondary-foreground: 0 0% 9%;
+    --muted: 0 0% 96.1%;
+    --muted-foreground: 0 0% 45.1%;
+    --accent: 0 0% 96.1%;
+    --accent-foreground: 0 0% 9%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 89.8%;
+    --input: 0 0% 89.8%;
+    --ring: 0 0% 3.9%;
+    --chart-1: 12 76% 61%;
+    --chart-2: 173 58% 39%;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+    --radius: 0.5rem;
+
+    /* Font family */
+    --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+}
+
+:root {
+  --background: #F9F7F2;
+  --foreground: #1A1A1A;
+
+  /* Gojek Colors */
+  --gojek-green: #00AA13;
+  --gojek-green-dark: #008C0E;
+  --gojek-green-light: #E8F8EA;
+  --gojek-blue: #0081A0;
+  --gojek-orange: #F06400;
+  --gojek-red: #EE2737;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -19,13 +92,162 @@
   }
 }
 
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-inter), Arial, Helvetica, sans-serif;
+  overflow-x: hidden;
+  overscroll-behavior-y: none;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-playfair), serif;
 }
 
 html {
+  scroll-behavior: smooth;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+.glass {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.glass-dark {
+  background: rgba(15, 76, 58, 0.85);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+/* Gojek Mobile Components */
+.gojek-card {
+  background-color: white;
+  border-radius: 1rem;
+  padding: 1rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.gojek-card-hover {
+  background-color: white;
+  border-radius: 1rem;
+  padding: 1rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: all 0.2s;
+}
+
+.gojek-card-hover:active {
+  transform: scale(0.98);
+}
+
+.btn-gojek-primary {
+  font-weight: 700;
+  padding: 0.75rem 1.5rem;
+  border-radius: 9999px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: all 0.15s;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background-color: var(--gojek-green);
+  color: white;
+}
+
+.btn-gojek-primary:active {
+  transform: scale(0.95);
+}
+
+.btn-gojek-secondary {
+  background-color: white;
+  font-weight: 700;
+  padding: 0.75rem 1.5rem;
+  border-radius: 9999px;
+  border: 2px solid var(--gojek-green);
+  transition: all 0.15s;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  color: var(--gojek-green);
+}
+
+.btn-gojek-secondary:active {
+  transform: scale(0.95);
+}
+
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: white;
+  border-top: 1px solid #e5e7eb;
+  z-index: 50;
+  box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.1);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.bottom-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 0.75rem;
+  min-height: 56px;
+  color: #6b7280;
+  transition: color 0.15s;
+}
+
+.bottom-nav-item.active {
+  color: var(--gojek-green);
+}
+
+.mobile-header {
+  position: sticky;
+  top: 0;
+  background-color: white;
+  border-bottom: 1px solid #e5e7eb;
+  z-index: 40;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  padding-top: env(safe-area-inset-top);
+}
+
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.pt-safe {
+  padding-top: env(safe-area-inset-top);
 }

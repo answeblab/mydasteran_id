@@ -4,8 +4,9 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
+import { LockKeyhole, Phone, ArrowLeft } from 'lucide-react'
 
-export default function MemberLoginPage() {
+export default function MemberLoginForm() {
   const [step, setStep] = useState('phone') // 'phone' | 'otp'
   const [phone, setPhone] = useState('')
   const [otp, setOtp] = useState('')
@@ -13,7 +14,7 @@ export default function MemberLoginPage() {
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState(null)
   const router = useRouter()
-  // Normalisasi nomor HP (versi JS dari yang kamu pakai di Flutter)
+
   const normalizePhone = (raw) => {
     if (!raw) return ''
     let phone = raw.trim()
@@ -29,7 +30,6 @@ export default function MemberLoginPage() {
     return phone
   }
 
-  // STEP 1: request OTP via Edge Function /functions/v1/request-otp
   const handleSendOtp = async (e) => {
     e.preventDefault()
     setLoading(true)
@@ -60,147 +60,144 @@ export default function MemberLoginPage() {
     }
   }
 
-  // STEP 2: login pakai fake_email + OTP (password)
- const handleVerifyOtp = async (e) => {
-  e.preventDefault()
-  setLoading(true)
-  setMessage(null)
+  const handleVerifyOtp = async (e) => {
+    e.preventDefault()
+    setLoading(true)
+    setMessage(null)
 
-  try {
-    if (!fakeEmail) {
-      throw new Error('Session OTP tidak ditemukan. Silakan minta kode ulang.')
+    try {
+      if (!fakeEmail) {
+        throw new Error('Session OTP tidak ditemukan. Silakan minta kode ulang.')
+      }
+
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: fakeEmail,
+        password: otp,
+      })
+
+      if (error || !data?.session) {
+        throw new Error('OTP salah atau sudah tidak berlaku')
+      }
+
+      setMessage('Login berhasil. Mengarahkan…')
+      router.replace('/member/dashboard')
+    } catch (err) {
+      setMessage(err.message || 'Gagal verifikasi OTP')
+    } finally {
+      setLoading(false)
     }
-
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email: fakeEmail,
-      password: otp,
-    })
-
-    if (error || !data?.session) {
-      throw new Error('OTP salah atau sudah tidak berlaku')
-    }
-
-    setMessage('Login berhasil. Mengarahkan…')
-    router.replace('/member/dashboard') 
-  } catch (err) {
-    setMessage(err.message || 'Gagal verifikasi OTP')
-  } finally {
-    setLoading(false)
   }
-}
-
 
   const isPhoneStep = step === 'phone'
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-[#F4FBFA] px-4 py-8">
-      <div className="w-full max-w-sm">
-        {/* HEADER */}
-        <div className="mb-5 flex items-center justify-between">
-          <Link
-            href="/"
-            className="text-xs text-[#0E918C] underline-offset-4 hover:underline"
-          >
-            ← Kembali ke beranda
-          </Link>
+    <div className="min-h-screen bg-gradient-to-br from-[var(--gojek-green)] to-[var(--gojek-green-dark)] flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        {/* Back Button */}
+        <Link
+          href="/"
+          className="inline-flex items-center gap-2 text-white mb-6 hover:text-white/80 transition-colors"
+        >
+          <ArrowLeft size={20} />
+          <span className="text-sm font-medium">Kembali ke Beranda</span>
+        </Link>
 
-          <div className="flex items-center gap-2">
-            {/* Logo mini (pakai bentuk bulat teal sementara) */}
-            
-            <div>
-              <p className="text-[11px] font-bold uppercase tracking-wide text-[#0F172A]">
-                mydasteran.id
-              </p>
-              <p className="text-[10px] text-[#6B7B85]">Member Login</p>
+        {/* Login Card */}
+        <div className="bg-white rounded-2xl shadow-xl p-6 md:p-8">
+          {/* Header */}
+          <div className="text-center mb-8">
+            <div className="w-16 h-16 bg-gradient-to-br from-[var(--gojek-green)] to-[var(--gojek-green-dark)] rounded-2xl flex items-center justify-center mx-auto mb-4">
+              {isPhoneStep ? (
+                <Phone size={32} className="text-white" />
+              ) : (
+                <LockKeyhole size={32} className="text-white" />
+              )}
             </div>
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">
+              {isPhoneStep ? 'Login Member' : 'Verifikasi OTP'}
+            </h1>
+            <p className="text-gray-600 text-sm">
+              {isPhoneStep
+                ? 'Masukkan nomor WhatsApp Anda'
+                : 'Kode OTP telah dikirim ke WhatsApp'
+              }
+            </p>
           </div>
-        </div>
 
-        {/* CARD */}
-        <div className="rounded-2xl border border-[#C4E3DF] bg-white/95 p-6 shadow-lg backdrop-blur-sm">
-          {/* TITLE */}
-          <h1 className="mb-2 text-lg font-semibold text-[#0F172A]">
-            Akses Member
-          </h1>
-          <p className="mb-5 text-xs text-[#6B7B85]">
-            Masukkan nomor HP yang terdaftar untuk menerima kode OTP. Akun ini
-            terhubung dengan sistem kasir & loyalty mydasteran.id.
-          </p>
-
-          {/* MESSAGE */}
+          {/* Message */}
           {message && (
-            <div className="mb-4 rounded-xl border border-[#C4E3DF] bg-[#E7F3F2] px-3 py-2 text-[11px] text-[#0F4F4C]">
-              {message}
+            <div className={`mb-6 p-4 rounded-xl border ${message.includes('berhasil')
+                ? 'bg-green-50 border-green-100 text-green-600'
+                : 'bg-red-50 border-red-100 text-red-600'
+              }`}>
+              <p className="text-sm">{message}</p>
             </div>
           )}
 
-          {/* STEP 1: NOMOR HP */}
+          {/* Step 1: Phone */}
           {isPhoneStep && (
-            <form onSubmit={handleSendOtp} className="space-y-4">
+            <form onSubmit={handleSendOtp} className="space-y-5">
               <div>
-                <label className="mb-1 block text-xs font-medium text-[#0F172A]">
-                  Nomor HP
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Nomor WhatsApp
                 </label>
-
-                <div className="flex items-center gap-2 rounded-xl border border-[#C4E3DF] bg-white px-3 py-2 focus-within:border-[#0E918C]">
-                  <span className="text-xs text-[#0E918C]">+62</span>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <span className="text-[var(--gojek-green)] font-bold">+62</span>
+                  </div>
                   <input
                     type="tel"
                     inputMode="numeric"
-                    placeholder="0812xxxxxxx"
-                    className="flex-1 bg-transparent text-sm text-[#0F172A] placeholder:text-[#9CAFB7] focus:outline-none"
+                    placeholder="812xxxxxxx"
+                    className="w-full pl-14 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[var(--gojek-green)] focus:border-transparent"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     required
                   />
                 </div>
-
-                <p className="mt-1 text-[10px] text-[#6B7B85]">
-                  Anda boleh mengetik 0812… Sistem otomatis mengubah ke format
-                  62xxxxxxxxxx.
+                <p className="text-xs text-gray-500 mt-2">
+                  Gunakan format: 08xxx atau 8xxx
                 </p>
               </div>
 
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full rounded-xl bg-[#006B65] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#0E918C] disabled:opacity-60"
+                className="w-full btn-gojek-primary disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {loading ? 'Mengirim…' : 'Kirim Kode OTP'}
+                {loading ? 'Mengirim Kode...' : 'Kirim Kode OTP'}
               </button>
             </form>
           )}
 
-          {/* STEP 2: OTP */}
+          {/* Step 2: OTP */}
           {!isPhoneStep && (
-            <form onSubmit={handleVerifyOtp} className="space-y-4">
+            <form onSubmit={handleVerifyOtp} className="space-y-5">
               <div>
-                <label className="mb-1 block text-xs font-medium text-[#0F172A]">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   Kode OTP
                 </label>
                 <input
                   type="text"
                   maxLength={6}
                   inputMode="numeric"
-                  placeholder="6 digit kode"
-                  className="w-full rounded-xl border border-[#C4E3DF] bg-white px-3 py-2 text-sm text-[#0F172A] placeholder:text-[#9CAFB7] focus:border-[#0E918C] focus:outline-none"
+                  placeholder="------"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl text-center text-2xl font-bold tracking-widest focus:outline-none focus:ring-2 focus:ring-[var(--gojek-green)] focus:border-transparent"
                   value={otp}
                   onChange={(e) => setOtp(e.target.value)}
                   required
                 />
-
-                <p className="mt-1 text-[10px] text-[#6B7B85]">
-                  Kode dikirim ke nomor yang Anda masukkan. Jangan bagikan kode
-                  ini ke siapa pun.
+                <p className="text-xs text-gray-500 mt-2 text-center">
+                  Masukkan 6 digit kode OTP
                 </p>
               </div>
 
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full rounded-xl bg-[#006B65] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#0E918C] disabled:opacity-60"
+                className="w-full btn-gojek-primary disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {loading ? 'Memverifikasi…' : 'Masuk'}
+                {loading ? 'Memverifikasi...' : 'Masuk Dashboard'}
               </button>
 
               <button
@@ -209,21 +206,21 @@ export default function MemberLoginPage() {
                   setStep('phone')
                   setOtp('')
                   setFakeEmail('')
+                  setMessage(null)
                 }}
-                className="w-full text-center text-[11px] text-[#0E918C] underline-offset-4 hover:underline"
+                className="w-full text-center text-sm text-[var(--gojek-green)] font-semibold hover:text-[var(--gojek-green-dark)] transition-colors"
               >
-                Ubah nomor / kirim ulang OTP
+                ← Ganti Nomor HP
               </button>
             </form>
           )}
-
-          {/* FOOTNOTE */}
-          <p className="mt-6 text-[10px] text-[#6B7B85]">
-            Jika kode tidak diterima, pastikan nomor sudah benar dan terdaftar
-            sebagai member. Hubungi admin untuk bantuan lebih lanjut.
-          </p>
         </div>
+
+        {/* Footer Note */}
+        <p className="text-center text-white/80 text-xs mt-6">
+          Dengan login, Anda menyetujui syarat dan ketentuan MyDasteran
+        </p>
       </div>
-    </main>
+    </div>
   )
 }

@@ -1,14 +1,14 @@
 {
-  "id": "/",
-  "name": "Mydasteran - Premium Garment",
-  "short_name": "Mydasteran",
-  "description": "Jasa produksi garment dan konveksi daster premium, loungewear, dan homewear.",
-  "start_url": "/",
+  "id": "/member/",
+  "name": "Mydasteran Member",
+  "short_name": "Mydasteran Member",
+  "description": "Aplikasi khusus member Mydasteran.",
+  "start_url": "/member/dashboard",
   "display": "standalone",
   "background_color": "#0F4C3A",
   "theme_color": "#0F4C3A",
   "orientation": "portrait",
-  "scope": "/",
+  "scope": "/member/",
   "icons": [
     {
       "src": "/icons/icon-192.png",

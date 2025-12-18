@@ -20,7 +20,7 @@ export default function MemberDashboardPage() {
 
   // PWA Install Logic
   const [deferredPrompt, setDeferredPrompt] = useState(null);
-  const [showInstallBtn, setShowInstallBtn] = useState(true); // Default true for UI Check
+  const [showInstallBtn, setShowInstallBtn] = useState(false);
 
   useEffect(() => {
     const handler = (e) => {

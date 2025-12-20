@@ -36,7 +36,7 @@ export default function HomePage() {
             Hubungi kami sekarang untuk konsultasi gratis
           </p>
           <a
-            href="https://wa.me/6281234567890?text=Halo,%20saya%20tertarik%20dengan%20layanan%20konveksi%20MyDasteran"
+            href="https://wa.me/6282234707911?text=Halo,%20saya%20tertarik%20dengan%20layanan%20konveksi%20MyDasteran"
             target="_blank"
             rel="noopener noreferrer"
             className="btn-gojek-primary inline-flex"

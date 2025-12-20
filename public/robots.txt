@@ -1,0 +1,19 @@
+# Robots.txt for MyDasteran
+# https://mydasteran.id
+
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://mydasteran.id/sitemap.xml
+
+# Disallow admin/internal paths
+Disallow: /api/
+Disallow: /_next/
+Disallow: /member/dashboard
+Disallow: /member/profile
+
+# Allow search engines to crawl public pages
+Allow: /
+Allow: /kalkulator
+Allow: /member/login

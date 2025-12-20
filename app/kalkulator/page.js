@@ -228,7 +228,7 @@ export default function ProductionCalculatorPage() {
 
                     {/* WhatsApp CTA */}
                     <a
-                        href="https://wa.me/6281234567890?text=Halo,%20saya%20tertarik%20konsultasi%20untuk%20produksi%20daster.%20Saya%20sudah%20coba%20kalkulator%20di%20website."
+                        href="https://wa.me/6282234707911?text=Halo,%20saya%20tertarik%20konsultasi%20untuk%20produksi%20daster.%20Saya%20sudah%20coba%20kalkulator%20di%20website."
                         target="_blank"
                         rel="noopener noreferrer"
                         className="btn-gojek-primary w-full text-center"

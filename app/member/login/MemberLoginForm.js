@@ -216,6 +216,29 @@ export default function MemberLoginForm() {
           )}
         </div>
 
+        {/* Info Pendaftaran Member */}
+        <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 mt-4 border border-white/20">
+          <h3 className="text-white font-semibold text-sm mb-2">📋 Belum jadi member?</h3>
+          <p className="text-white/90 text-xs leading-relaxed mb-3">
+            Daftar member dengan cara:
+          </p>
+          <ul className="text-white/90 text-xs space-y-1 mb-3">
+            <li>• Hubungi admin via WhatsApp, atau</li>
+            <li>• Datang langsung ke toko kami</li>
+          </ul>
+          <p className="text-white/80 text-xs">
+            <span className="text-yellow-300 font-medium">Syarat:</span> Minimal belanja 1x Transaksi
+          </p>
+          <a
+            href="https://wa.me/6282234707911?text=Halo%20admin,%20saya%20ingin%20mendaftar%20sebagai%20member%20MyDasteran"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-3 block w-full text-center bg-white text-[var(--gojek-green)] font-semibold text-sm py-2 px-4 rounded-lg hover:bg-white/90 transition-colors"
+          >
+            💬 Chat Admin untuk Daftar
+          </a>
+        </div>
+
         {/* Footer Note */}
         <p className="text-center text-white/80 text-xs mt-6">
           Dengan login, Anda menyetujui syarat dan ketentuan MyDasteran

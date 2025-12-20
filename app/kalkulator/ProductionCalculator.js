@@ -3,54 +3,83 @@
 import { useState } from 'react';
 import { Calculator, TrendingUp } from 'lucide-react';
 
+// Konstanta kebutuhan kain dan ongkos jahit per kategori
+const FABRIC_REQUIREMENTS = {
+    'daster_pendek': {
+        name: 'Daster Pendek',
+        fabricMin: 1.5,
+        fabricMax: 1.6,
+        fabricAvg: 1.55,
+        sewingMin: 3500,
+        sewingMax: 5000,
+        sewingAvg: 4250,
+        description: 'Daster pendek standar, bawah lutut'
+    },
+    'dress_panjang': {
+        name: 'Dress Panjang',
+        fabricMin: 1.6,
+        fabricMax: 2.0,
+        fabricAvg: 1.8,
+        sewingMin: 5000,
+        sewingMax: 8000,
+        sewingAvg: 6500,
+        description: 'Dress panjang sampai mata kaki'
+    },
+    'gamis': {
+        name: 'Gamis',
+        fabricMin: 2.6,
+        fabricMax: 3.0,
+        fabricAvg: 2.8,
+        sewingMin: 7500,
+        sewingMax: 10000,
+        sewingAvg: 8750,
+        description: 'Gamis full length dengan lengan panjang'
+    }
+};
+
 export default function ProductionCalculator() {
-    const [quantity, setQuantity] = useState(1);
-    const [chestWidth, setChestWidth] = useState(110);
-    const [dressLength, setDressLength] = useState(90);
-    const [sleeveType, setSleeveType] = useState('short'); // short or long
+    const [quantity, setQuantity] = useState(50);
+    const [category, setCategory] = useState('daster_pendek');
     const [hasAccessories, setHasAccessories] = useState(false);
-    const [accessoryLevel, setAccessoryLevel] = useState('basic');
+    const [accessoryLevel, setAccessoryLevel] = useState('standard');
 
     // Konstanta harga
-    const FABRIC_PRICE_PER_YARD = 18000;
-    const SEWING_COST = 5000;
-    const ACCESSORY_BASIC = 7000;
-    const ACCESSORY_PREMIUM = 10000;
+    const FABRIC_PRICE_PER_YARD = 21000;
+    const MARGIN_PER_PCS = 4000;
+    const ACCESSORY_STANDARD = 0;      // Aksesoris standart
+    const ACCESSORY_COMPLEX = 2000;    // Aksesoris kompleks (renda, dll)
+    const BULK_DISCOUNT = 1000;        // Potongan untuk pembelian >100 pcs
+    const BULK_THRESHOLD = 100;        // Minimal qty untuk dapat diskon
 
-    // Hitung kebutuhan kain
+    // Hitung kebutuhan kain berdasarkan kategori
     const calculateFabricNeeded = () => {
-        // Kain katun rayon lebar 150cm
-        // Target: Wanita Indonesia BB 40-50kg
-        const lengthWithAllowance = dressLength + 2; // +5cm kelonggaran (kampuh 1cm x 2 sisi + cadangan)
-        const needsDoubleWidth = chestWidth > 150; // Hanya jika LD > 150cm
+        const categoryData = FABRIC_REQUIREMENTS[category];
+        return categoryData.fabricAvg;
+    };
 
-        // Tambahan untuk lengan (disesuaikan untuk wanita Indonesia)
-        const sleeveLength = sleeveType === 'long' ? 45 : 20; // Lengan panjang 45cm, pendek 20cm
-        const sleeveAllowance = sleeveLength + 2; // +3cm kelonggaran (kampuh 1cm + cadangan)
-
-        let totalLengthCm;
-        if (needsDoubleWidth) {
-            // Sangat jarang untuk target market
-            totalLengthCm = (lengthWithAllowance * 4) + (sleeveAllowance * 2);
-        } else {
-            // Normal: 2x panjang untuk depan-belakang + lengan
-            totalLengthCm = (lengthWithAllowance * 2) + (sleeveAllowance * 2);
-        }
-
-        // Konversi cm ke yard (1 yard = 91.44 cm)
-        const fabricYards = totalLengthCm / 91.44;
-        return fabricYards;
+    // Hitung ongkos jahit berdasarkan kategori
+    const calculateSewingCost = () => {
+        const categoryData = FABRIC_REQUIREMENTS[category];
+        return categoryData.sewingAvg;
     };
 
     const fabricYards = calculateFabricNeeded();
     const fabricCost = fabricYards * FABRIC_PRICE_PER_YARD;
-    const sewingCost = SEWING_COST;
+    const sewingCost = calculateSewingCost();
     const accessoryCost = hasAccessories
-        ? (accessoryLevel === 'premium' ? ACCESSORY_PREMIUM : ACCESSORY_BASIC)
+        ? (accessoryLevel === 'complex' ? ACCESSORY_COMPLEX : ACCESSORY_STANDARD)
         : 0;
 
-    const costPerPiece = fabricCost + sewingCost + accessoryCost;
+    // Hitung harga dasar per pcs
+    const baseCostPerPiece = fabricCost + sewingCost + accessoryCost + MARGIN_PER_PCS;
+
+    // Cek apakah dapat diskon bulk
+    const isBulkOrder = quantity >= BULK_THRESHOLD;
+    const discountPerPiece = isBulkOrder ? BULK_DISCOUNT : 0;
+    const costPerPiece = baseCostPerPiece - discountPerPiece;
+
     const totalCost = costPerPiece * quantity;
+    const totalDiscount = discountPerPiece * quantity;
     const suggestedPrice = costPerPiece * 1.5;
     const totalRevenue = suggestedPrice * quantity;
     const totalProfit = totalRevenue - totalCost;
@@ -67,80 +96,60 @@ export default function ProductionCalculator() {
                     </label>
                     <input
                         type="number"
-                        min="1"
+                        min="50"
                         value={quantity}
-                        onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
+                        onChange={(e) => setQuantity(Math.max(50, parseInt(e.target.value) || 50))}
                         className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[var(--gojek-green)] focus:border-transparent"
                     />
+                    <p className="text-xs text-gray-500 mt-1">
+                        💡 Pesan min 100 pcs Lebih hemat
+                    </p>
+                    {isBulkOrder && (
+                        <div className="mt-2 px-3 py-2 bg-green-50 border border-green-200 rounded-lg">
+                            <p className="text-sm text-green-700 font-medium flex items-center gap-1">
+                                🎉 Selamat! Hpp jadi  <span className="font-bold">Lebih Murah</span>
+                            </p>
+                            <p className="text-xs text-green-600 mt-1">
+                                Total hemat: Rp {totalDiscount.toLocaleString('id-ID')}
+                            </p>
+                        </div>
+                    )}
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Lingkar Dada (LD) - cm
+                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                        Kategori Produk
                     </label>
-                    <input
-                        type="number"
-                        min="80"
-                        max="150"
-                        value={chestWidth}
-                        onChange={(e) => setChestWidth(parseInt(e.target.value) || 110)}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[var(--gojek-green)] focus:border-transparent"
-                    />
-                    <p className="text-xs text-gray-500 mt-1">Standar: 110 cm</p>
-                </div>
-
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Panjang Daster - cm
-                    </label>
-                    <input
-                        type="number"
-                        min="70"
-                        max="120"
-                        value={dressLength}
-                        onChange={(e) => setDressLength(parseInt(e.target.value) || 90)}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[var(--gojek-green)] focus:border-transparent"
-                    />
-                    <p className="text-xs text-gray-500 mt-1">Standar pendek: 90 cm</p>
-                </div>
-
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Jenis Lengan
-                    </label>
-                    <div className="flex gap-3">
-                        <label className="flex-1 cursor-pointer">
-                            <input
-                                type="radio"
-                                name="sleeve"
-                                value="short"
-                                checked={sleeveType === 'short'}
-                                onChange={(e) => setSleeveType(e.target.value)}
-                                className="sr-only"
-                            />
-                            <div className={`px-4 py-3 rounded-xl border-2 text-center transition-all ${sleeveType === 'short'
-                                ? 'border-[var(--gojek-green)] bg-[var(--gojek-green-light)] text-[var(--gojek-green)] font-semibold'
-                                : 'border-gray-300 text-gray-700'
-                                }`}>
-                                Lengan Pendek
-                            </div>
-                        </label>
-                        <label className="flex-1 cursor-pointer">
-                            <input
-                                type="radio"
-                                name="sleeve"
-                                value="long"
-                                checked={sleeveType === 'long'}
-                                onChange={(e) => setSleeveType(e.target.value)}
-                                className="sr-only"
-                            />
-                            <div className={`px-4 py-3 rounded-xl border-2 text-center transition-all ${sleeveType === 'long'
-                                ? 'border-[var(--gojek-green)] bg-[var(--gojek-green-light)] text-[var(--gojek-green)] font-semibold'
-                                : 'border-gray-300 text-gray-700'
-                                }`}>
-                                Lengan Panjang
-                            </div>
-                        </label>
+                    <div className="space-y-2">
+                        {Object.entries(FABRIC_REQUIREMENTS).map(([key, data]) => (
+                            <label key={key} className="block cursor-pointer">
+                                <input
+                                    type="radio"
+                                    name="category"
+                                    value={key}
+                                    checked={category === key}
+                                    onChange={(e) => setCategory(e.target.value)}
+                                    className="sr-only"
+                                />
+                                <div className={`px-4 py-3 rounded-xl border-2 transition-all ${category === key
+                                    ? 'border-[var(--gojek-green)] bg-[var(--gojek-green-light)]'
+                                    : 'border-gray-300 hover:border-gray-400'
+                                    }`}>
+                                    <div className="flex justify-between items-center">
+                                        <div>
+                                            <p className={`font-semibold ${category === key ? 'text-[var(--gojek-green)]' : 'text-gray-900'}`}>
+                                                {data.name}
+                                            </p>
+                                            <p className="text-xs text-gray-500">{data.description}</p>
+                                        </div>
+                                        <div className={`text-right ${category === key ? 'text-[var(--gojek-green)]' : 'text-gray-600'}`}>
+                                            <p className="text-sm font-bold">{data.fabricMin} - {data.fabricMax}</p>
+                                            <p className="text-xs">yard/pcs</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </label>
+                        ))}
                     </div>
                 </div>
 
@@ -165,23 +174,23 @@ export default function ProductionCalculator() {
                                 <input
                                     type="radio"
                                     name="accessory"
-                                    value="basic"
-                                    checked={accessoryLevel === 'basic'}
+                                    value="standard"
+                                    checked={accessoryLevel === 'standard'}
                                     onChange={(e) => setAccessoryLevel(e.target.value)}
                                     className="w-4 h-4 text-[var(--gojek-green)] focus:ring-[var(--gojek-green)]"
                                 />
-                                <span className="text-sm text-gray-700">Basic</span>
+                                <span className="text-sm text-gray-700">Standart</span>
                             </label>
                             <label className="flex items-center gap-2 cursor-pointer">
                                 <input
                                     type="radio"
                                     name="accessory"
-                                    value="premium"
-                                    checked={accessoryLevel === 'premium'}
+                                    value="complex"
+                                    checked={accessoryLevel === 'complex'}
                                     onChange={(e) => setAccessoryLevel(e.target.value)}
                                     className="w-4 h-4 text-[var(--gojek-green)] focus:ring-[var(--gojek-green)]"
                                 />
-                                <span className="text-sm text-gray-700">Premium</span>
+                                <span className="text-sm text-gray-700">Kompleks / Renda dll</span>
                             </label>
                         </div>
                     </div>
@@ -193,15 +202,31 @@ export default function ProductionCalculator() {
                 <h3 className="font-bold text-gray-900 flex items-center gap-2">
                     <TrendingUp size={18} className="text-[var(--gojek-green)]" />
                     Estimasi HPP
+                    {isBulkOrder && (
+                        <span className="ml-auto text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full font-medium">
+                            🏷️ Diskon Grosir
+                        </span>
+                    )}
                 </h3>
 
                 <div className="bg-gradient-to-br from-[var(--gojek-green-light)] to-white rounded-xl p-4">
                     <div className="flex justify-between items-center">
                         <div>
                             <p className="text-sm text-gray-600 mb-1">HPP per Pcs</p>
-                            <p className="text-3xl font-bold text-[var(--gojek-green)]">
-                                Rp {Math.round(costPerPiece).toLocaleString('id-ID')}
-                            </p>
+                            {isBulkOrder ? (
+                                <div>
+                                    <p className="text-sm text-gray-400 line-through">
+                                        Rp {Math.round(baseCostPerPiece).toLocaleString('id-ID')}
+                                    </p>
+                                    <p className="text-3xl font-bold text-[var(--gojek-green)]">
+                                        Rp {Math.round(costPerPiece).toLocaleString('id-ID')}
+                                    </p>
+                                </div>
+                            ) : (
+                                <p className="text-3xl font-bold text-[var(--gojek-green)]">
+                                    Rp {Math.round(costPerPiece).toLocaleString('id-ID')}
+                                </p>
+                            )}
                         </div>
                         <div className="w-16 h-16 rounded-full bg-[var(--gojek-green)] flex items-center justify-center">
                             <Calculator size={28} className="text-white" />
@@ -254,7 +279,7 @@ export default function ProductionCalculator() {
 
             {/* WhatsApp CTA */}
             <a
-                href="https://wa.me/6281234567890?text=Halo,%20saya%20tertarik%20konsultasi%20untuk%20produksi%20daster.%20Saya%20sudah%20coba%20kalkulator%20di%20website."
+                href="https://wa.me/6282234707911?text=Halo,%20saya%20tertarik%20konsultasi%20untuk%20produksi%20daster.%20Saya%20sudah%20coba%20kalkulator%20di%20website."
                 target="_blank"
                 rel="noopener noreferrer"
                 className="btn-gojek-primary w-full text-center block"

@@ -25,7 +25,7 @@ export default function Services() {
         {
             icon: Zap,
             title: 'Orderan Besar',
-            description: 'Siap produksi skala besar dengan kapasitas 1000+ pcs per minggu',
+            description: 'Siap produksi skala besar dengan kapasitas 10000+ pcs per minggu',
             color: 'text-orange-600'
         },
         {

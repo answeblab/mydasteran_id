@@ -14,12 +14,12 @@ export default function Hero() {
 
                 {/* Heading */}
                 <h1 className="text-3xl md:text-4xl font-bold mb-4 leading-tight">
-                    Partner Terpercaya untuk Produksi Daster Custom Anda
+                    Partner Bisnis Terpercaya untuk Produksi Daster
                 </h1>
 
                 {/* Description */}
                 <p className="text-white/90 text-base mb-8 leading-relaxed">
-                    Spesialis produksi daster dengan layanan custom model, white label, dan kemitraan B2B. Siap orderan besar, tepat waktu, harga terjangkau.
+                    Spesialis produksi daster dengan layanan custom model, white label, dan kemitraan B2B. Siap orderan besar, tepat waktu dengan harga terjangkau.
                 </p>
 
                 {/* CTA Buttons */}
@@ -32,7 +32,7 @@ export default function Hero() {
                         <ArrowRight size={20} />
                     </a>
                     <a
-                        href="https://wa.me/6281234567890?text=Halo,%20saya%20tertarik%20dengan%20layanan%20konveksi%20MyDasteran"
+                        href="https://wa.me/6282234707911?text=Halo,%20saya%20tertarik%20dengan%20layanan%20konveksi%20MyDasteran"
                         target="_blank"
                         rel="noopener noreferrer"
                         className="btn-gojek-secondary border-white text-white w-full"
@@ -44,7 +44,7 @@ export default function Hero() {
                 {/* Stats */}
                 <div className="grid grid-cols-3 gap-4 mt-8 pt-8 border-t border-white/20">
                     <div>
-                        <p className="text-2xl font-bold">1000+</p>
+                        <p className="text-2xl font-bold">10000+</p>
                         <p className="text-xs text-white/80 mt-1">Pcs/Minggu</p>
                     </div>
                     <div>

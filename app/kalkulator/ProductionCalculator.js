@@ -38,10 +38,13 @@ const FABRIC_REQUIREMENTS = {
 };
 
 export default function ProductionCalculator() {
-    const [quantity, setQuantity] = useState(50);
+    const [quantityInput, setQuantityInput] = useState('50');
     const [category, setCategory] = useState('daster_pendek');
     const [hasAccessories, setHasAccessories] = useState(false);
     const [accessoryLevel, setAccessoryLevel] = useState('standard');
+
+    // Parse quantity for calculations (minimum 1 for calculations, display enforces 50 on blur)
+    const quantity = parseInt(quantityInput) || 50;
 
     // Konstanta harga
     const FABRIC_PRICE_PER_YARD = 21000;
@@ -96,9 +99,15 @@ export default function ProductionCalculator() {
                     </label>
                     <input
                         type="number"
-                        min="50"
-                        value={quantity}
-                        onChange={(e) => setQuantity(Math.max(50, parseInt(e.target.value) || 50))}
+                        min="1"
+                        value={quantityInput}
+                        onChange={(e) => setQuantityInput(e.target.value)}
+                        onBlur={(e) => {
+                            const val = parseInt(e.target.value);
+                            if (!val || val < 1) {
+                                setQuantityInput('50');
+                            }
+                        }}
                         className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[var(--gojek-green)] focus:border-transparent"
                     />
                     <p className="text-xs text-gray-500 mt-1">

@@ -57,9 +57,6 @@ export default function PreorderDetailPage({ params }) {
                         ),
                         order_items (
                             id, product_name_snapshot, quantity, unit_price, subtotal
-                        ),
-                        payments (
-                            id, amount, status, created_at
                         )
                     `)
                     .eq("id", orderId)
@@ -73,7 +70,21 @@ export default function PreorderDetailPage({ params }) {
                     console.log("Fetched order:", data);
                     setOrder(data);
                     setItems(data.order_items || []);
-                    setPayments(data.payments || []);
+
+                    // Fetch payments separately using order_id (like in Flutter)
+                    const { data: paymentsData, error: paymentsError } = await supabase
+                        .from('payments')
+                        .select('id, amount, status, created_at')
+                        .eq('order_id', orderId)
+                        .order('created_at', { ascending: true });
+
+                    if (paymentsError) {
+                        console.error("Error fetching payments:", paymentsError);
+                        setPayments([]);
+                    } else {
+                        console.log("Fetched payments:", paymentsData);
+                        setPayments(paymentsData || []);
+                    }
 
                     // Fetch production status from Edge Function using invoice number
                     const invoiceNum = data.invoice_number || data.order_number;
@@ -149,7 +160,7 @@ export default function PreorderDetailPage({ params }) {
 
     // Calculations
     const totalPaid = payments
-        .filter(p => p.status === 'completed')
+        .filter(p => p.status === 'confirmed')
         .reduce((sum, p) => sum + (p.amount || 0), 0);
     const shortage = (order.grand_total || 0) - totalPaid;
     const details = order.preorder_details || {};

@@ -96,7 +96,6 @@ export default function MemberDashboardPage() {
           .select(`
             *,
             order_items(*),
-            payments(*),
             preorder_details(*)
           `)
           .eq('customer_id', customerData.id)
@@ -110,7 +109,26 @@ export default function MemberDashboardPage() {
           console.error('Preorders error:', preordersError);
         } else if (preordersData) {
           console.log('✅ Preorders loaded:', preordersData.length, 'items');
-          setPreorders(preordersData);
+
+          // Fetch payments separately for each order
+          const ordersWithPayments = await Promise.all(
+            preordersData.map(async (order) => {
+              const { data: paymentsData, error: paymentsError } = await supabase
+                .from('payments')
+                .select('id, amount, status, created_at')
+                .eq('order_id', order.id)
+                .order('created_at', { ascending: true });
+
+              if (paymentsError) {
+                console.error(`Error fetching payments for order ${order.id}:`, paymentsError);
+                return { ...order, payments: [] };
+              }
+
+              return { ...order, payments: paymentsData || [] };
+            })
+          );
+
+          setPreorders(ordersWithPayments);
         } else {
           console.log('⚠️ No preorders found');
         }

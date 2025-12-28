@@ -44,13 +44,12 @@ export default function PreorderListPage() {
 
                 setCustomer(customerData)
 
-                // Fetch preorders - EXACT SAME AS DASHBOARD
+                // Fetch preorders - without nested payments
                 const { data: preordersData, error: preordersError } = await supabase
                     .from('orders')
                     .select(`
             *,
             order_items(*),
-            payments(*),
             preorder_details(*)
           `)
                     .eq('customer_id', customerData.id)
@@ -64,7 +63,26 @@ export default function PreorderListPage() {
                     setErrorMsg('Gagal memuat data preorder.')
                 } else if (preordersData) {
                     console.log('✅ Preorders loaded:', preordersData.length, 'items')
-                    setPreorders(preordersData)
+
+                    // Fetch payments separately for each order
+                    const ordersWithPayments = await Promise.all(
+                        preordersData.map(async (order) => {
+                            const { data: paymentsData, error: paymentsError } = await supabase
+                                .from('payments')
+                                .select('id, amount, status, created_at')
+                                .eq('order_id', order.id)
+                                .order('created_at', { ascending: true })
+
+                            if (paymentsError) {
+                                console.error(`Error fetching payments for order ${order.id}:`, paymentsError)
+                                return { ...order, payments: [] }
+                            }
+
+                            return { ...order, payments: paymentsData || [] }
+                        })
+                    )
+
+                    setPreorders(ordersWithPayments)
                 } else {
                     console.log('⚠️ No preorders found')
                     setPreorders([])
@@ -128,7 +146,7 @@ export default function PreorderListPage() {
                     <div className="space-y-3">
                         {preorders.map((order) => {
                             const totalPaid = (order.payments || [])
-                                .filter(p => p.status === 'completed')
+                                .filter(p => p.status === 'confirmed')
                                 .reduce((sum, p) => sum + (p.amount || 0), 0)
                             const shortage = (order.grand_total || 0) - totalPaid
                             const itemCount = order.order_items?.length || 0

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase/client'
-import { ArrowLeft, Calendar, Package } from 'lucide-react'
+import { ArrowLeft, Calendar, Package, Share2 } from 'lucide-react'
 import MobileHeader from '@/components/mobile/MobileHeader'
 
 export default function OrderDetailPage() {
@@ -35,6 +35,46 @@ export default function OrderDetailPage() {
       'Rp ' +
       Number(value).toLocaleString('id-ID', { maximumFractionDigits: 0 })
     )
+  }
+
+  const handleShareReceipt = async () => {
+    if (!order) return
+    const formattedText = `*Struk Belanja Mydasteran*
+No. Order: #${order.order_number}
+Tanggal: ${formatDate(order.created_at)}
+Pelanggan: ${customer?.name || '-'}
+
+*Daftar Item:*
+${items.map((item, idx) => `${idx + 1}. ${item.product_name} (${item.quantity}x) - ${formatCurrency(item.subtotal)}`).join('\n')}
+
+*Rincian:*
+Subtotal: ${formatCurrency(order.subtotal)}
+Ongkir: ${formatCurrency(order.shipping_cost)}
+Total: ${formatCurrency(order.grand_total)}
+Poin Didapat: +${order.loyalty_points_earned || 0} Poin
+Status Pembayaran: ${order.payment_status === 'paid' ? 'Lunas' : order.payment_status}
+Metode: ${order.payment_method_name || '-'}
+
+Terima kasih telah berbelanja di Mydasteran!`
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `Struk Mydasteran #${order.order_number}`,
+          text: formattedText,
+        })
+      } catch (err) {
+        console.error('Error sharing:', err)
+      }
+    } else {
+      try {
+        await navigator.clipboard.writeText(formattedText)
+        alert('Struk berhasil disalin ke clipboard!')
+      } catch (err) {
+        console.error('Error copying text:', err)
+        alert('Gagal menyalin struk. Silakan salin secara manual.')
+      }
+    }
   }
 
   useEffect(() => {
@@ -304,6 +344,15 @@ export default function OrderDetailPage() {
             </div>
           </div>
         </div>
+
+        {/* Share Button */}
+        <button
+          onClick={handleShareReceipt}
+          className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-gradient-to-r from-[var(--gojek-green)] to-[var(--gojek-green-dark)] text-white font-bold rounded-xl shadow-md transition-all active:scale-[0.98] hover:shadow-lg"
+        >
+          <Share2 size={18} />
+          Bagikan Struk Digital
+        </button>
       </div>
     </div>
   )

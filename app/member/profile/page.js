@@ -16,12 +16,14 @@ import {
   ChevronDown,
   ChevronUp
 } from 'lucide-react'
+import MemberQR from "@/app/member/_components/MemberQR"
 
 export default function MemberProfilePage() {
   const router = useRouter()
 
   const [user, setUser] = useState(null)
   const [customer, setCustomer] = useState(null)
+  const [loyalty, setLoyalty] = useState(null)
   const [addresses, setAddresses] = useState([])
   const [loading, setLoading] = useState(true)
   const [errorMsg, setErrorMsg] = useState(null)
@@ -62,6 +64,22 @@ export default function MemberProfilePage() {
     return `+62 ${base.slice(0, 3)}-${base.slice(3, 7)}-${base.slice(7)}`
   }
 
+  const tierInfo = {
+    agen: { name: "Agen", color: "#CD7F32", next: "Juragan", threshold: 100000000 },
+    juragan: { name: "Juragan", color: "#FFD700", next: "Sultan", threshold: 200000000 },
+    sultan: { name: "Sultan", color: "#E5E4E2", next: null, threshold: null },
+  };
+
+  const currentTier = loyalty?.tier || "agen";
+  const tierData = tierInfo[currentTier] || tierInfo.agen;
+
+  const tierGradients = {
+    agen: "from-orange-400 via-orange-500 to-amber-700",
+    juragan: "from-yellow-300 via-amber-400 to-amber-600",
+    sultan: "from-slate-700 via-slate-800 to-black",
+  };
+  const cardGradient = tierGradients[currentTier] || tierGradients.agen;
+
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -91,6 +109,16 @@ export default function MemberProfilePage() {
         }
 
         setCustomer(customerData)
+
+        // Fetch Loyalty
+        const { data: loyaltyData } = await supabase
+          .from("loyalty_accounts")
+          .select("id, points_balance, tier, total_eligible_amount")
+          .eq("customer_id", customerData.id)
+          .single();
+
+        if (loyaltyData) setLoyalty(loyaltyData);
+
         await loadAddresses(customerData.id)
       } catch (err) {
         console.error(err)
@@ -320,10 +348,45 @@ export default function MemberProfilePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-gray-200 border-t-[var(--gojek-green)] rounded-full animate-spin mx-auto"></div>
-          <p className="mt-4 text-gray-500">Memuat...</p>
+      <div className="min-h-screen bg-gray-50 pb-20">
+        {/* Header */}
+        <div className="bg-white border-b border-gray-100 p-4">
+          <h1 className="text-xl font-bold text-gray-900">Profil</h1>
+          <p className="text-sm text-gray-500 mt-1">Kelola informasi akun Anda</p>
+        </div>
+
+        <div className="p-4 space-y-4 max-w-2xl mx-auto">
+          {/* Profile Card Skeleton */}
+          <div className="gojek-card animate-pulse">
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 bg-gray-200 rounded-full flex-shrink-0" />
+              <div className="flex-1 space-y-2">
+                <div className="h-5 bg-gray-200 rounded-full w-32" />
+                <div className="h-4 bg-gray-100 rounded-full w-24" />
+              </div>
+            </div>
+          </div>
+
+          {/* QR Code Section Skeleton */}
+          <div className="gojek-card animate-pulse">
+            <div className="flex flex-col items-center py-4 space-y-3">
+              <div className="h-4 bg-gray-200 rounded-full w-48 mb-1" />
+              <div className="w-32 h-32 bg-gray-200 rounded-xl" />
+              <div className="h-9 bg-gray-200 rounded-lg w-full mt-2" />
+            </div>
+          </div>
+
+          {/* Addresses Section Skeleton */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="h-6 bg-gray-200 rounded-full w-36 animate-pulse" />
+              <div className="h-8 bg-gray-200 rounded-lg w-20 animate-pulse" />
+            </div>
+            <div className="p-4 rounded-lg bg-white border border-gray-100 animate-pulse space-y-3">
+              <div className="h-4 bg-gray-200 rounded-full w-48" />
+              <div className="h-3 bg-gray-100 rounded-full w-full" />
+            </div>
+          </div>
         </div>
       </div>
     )
@@ -361,6 +424,14 @@ export default function MemberProfilePage() {
             </div>
           </div>
         </div>
+
+        {/* QR Code Section */}
+        <MemberQR
+          customer={customer}
+          loyalty={loyalty}
+          tierData={tierData}
+          cardGradient={cardGradient}
+        />
 
         {/* Addresses Section */}
         <div className="space-y-3">

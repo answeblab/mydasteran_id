@@ -12,6 +12,7 @@ import {
   Search,
   ArrowRight
 } from "lucide-react";
+import { SkeletonCard } from "@/app/member/_components/SkeletonCard";
 
 export default function MemberHistoryPage() {
   const router = useRouter();
@@ -173,10 +174,35 @@ export default function MemberHistoryPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-gray-200 border-t-[var(--gojek-green)] rounded-full animate-spin mx-auto"></div>
-          <p className="mt-4 text-gray-500">Memuat...</p>
+      <div className="min-h-screen bg-gray-50 pb-20">
+        {/* Header */}
+        <div className="bg-white border-b border-gray-100 p-4">
+          <h1 className="text-xl font-bold text-gray-900">Riwayat Pesanan</h1>
+          <p className="text-sm text-gray-500 mt-1">Lihat semua transaksi Anda</p>
+        </div>
+
+        <div className="p-4 space-y-4 max-w-2xl mx-auto">
+          {/* Filter Card Skeleton */}
+          <div className="gojek-card animate-pulse">
+            <div className="h-4 bg-gray-200 rounded-full w-24 mb-4" />
+            <div className="grid grid-cols-2 gap-3">
+              <div className="h-10 bg-gray-100 rounded-lg w-full" />
+              <div className="h-10 bg-gray-100 rounded-lg w-full" />
+            </div>
+          </div>
+
+          {/* Order Count Skeleton */}
+          <div className="flex items-center justify-between">
+            <div className="h-5 bg-gray-200 rounded-full w-20 animate-pulse" />
+            <div className="h-6 bg-gray-200 rounded-full w-16 animate-pulse" />
+          </div>
+
+          {/* Order List Skeletons */}
+          <div className="space-y-3">
+            <SkeletonCard />
+            <SkeletonCard />
+            <SkeletonCard />
+          </div>
         </div>
       </div>
     );
@@ -258,13 +284,23 @@ export default function MemberHistoryPage() {
         </div>
 
         {/* Order List */}
-        {orders.length === 0 ? (
-          <div className="gojek-card text-center py-12">
-            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4 mx-auto">
-              <Search size={32} className="text-gray-400" />
+        {isFilterLoading ? (
+          <div className="space-y-3">
+            <SkeletonCard />
+            <SkeletonCard />
+            <SkeletonCard />
+          </div>
+        ) : orders.length === 0 ? (
+          <div className="gojek-card text-center py-10 flex flex-col items-center justify-center">
+            <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-4 text-gray-400">
+              <svg className="w-10 h-10 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+              </svg>
             </div>
-            <p className="font-bold text-gray-900">Tidak Ada Pesanan</p>
-            <p className="text-sm text-gray-500 mt-1">Coba ubah periode filter</p>
+            <h3 className="font-bold text-gray-800 text-base">Belum Ada Transaksi</h3>
+            <p className="text-xs text-gray-500 mt-1 max-w-xs mx-auto">
+              Tidak ada pesanan tercatat untuk periode {monthOptions.find(m => m.value === selectedMonth)?.label} {selectedYear}. Coba pilih bulan atau tahun lainnya.
+            </p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -272,23 +308,24 @@ export default function MemberHistoryPage() {
               <Link
                 key={order.order_id}
                 href={`/member/history/${order.order_id}`}
-                className="block gojek-card hover:shadow-lg transition-shadow"
+                className="block gojek-card hover:shadow-lg transition-all hover:-translate-y-0.5 active:translate-y-0 duration-200"
               >
                 {/* Header */}
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex-1">
                     <p className="font-bold text-gray-900 mb-1">#{order.order_number}</p>
-                    <div className="flex items-center gap-2 text-xs text-gray-500">
+                    <div className="flex items-center gap-2 text-[11px] text-gray-500">
                       <Calendar size={12} />
                       <span>{formatDate(order.created_at)}</span>
                     </div>
                   </div>
-                  <span className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${order.status === 'completed' || order.status === 'sent'
-                      ? 'bg-green-100 text-green-700'
+                  <span className={`px-2.5 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${
+                    order.status === 'completed' || order.status === 'sent'
+                      ? 'bg-green-50 text-green-700 border border-green-200'
                       : order.status === 'cancelled'
-                        ? 'bg-red-100 text-red-700'
-                        : 'bg-yellow-100 text-yellow-700'
-                    }`}>
+                        ? 'bg-red-50 text-red-700 border border-red-200'
+                        : 'bg-yellow-50 text-yellow-700 border border-yellow-200'
+                  }`}>
                     {order.status === 'completed' ? '✅ Selesai' :
                       order.status === 'sent' ? '🚚 Dikirim' :
                         order.status === 'cancelled' ? '❌ Dibatalkan' :
@@ -302,23 +339,24 @@ export default function MemberHistoryPage() {
                 {/* Payment Info */}
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-xs text-gray-500 mb-1">Total Pembayaran</p>
-                    <p className="font-bold text-gray-900 text-lg">{formatCurrency(order.grand_total)}</p>
+                    <p className="text-[10px] text-gray-400 uppercase font-bold tracking-wider mb-0.5">Total Pembayaran</p>
+                    <p className="font-bold text-gray-900 text-base">{formatCurrency(order.grand_total)}</p>
                   </div>
                   <div className="text-right">
-                    <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${order.payment_status === 'paid'
-                        ? 'bg-green-100 text-green-700'
-                        : 'bg-orange-100 text-orange-700'
-                      }`}>
+                    <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-semibold ${
+                      order.payment_status === 'paid'
+                        ? 'bg-green-50 text-green-700 border border-green-200'
+                        : 'bg-orange-50 text-orange-700 border border-orange-200'
+                    }`}>
                       {order.payment_status === 'paid' ? '✓ Lunas' : order.payment_status}
                     </span>
                   </div>
                 </div>
 
                 {/* View Details */}
-                <div className="mt-3 pt-3 border-t border-gray-100 flex items-center justify-between">
-                  <span className="text-sm text-[var(--gojek-green)] font-semibold">Lihat Detail</span>
-                  <ArrowRight size={16} className="text-[var(--gojek-green)]" />
+                <div className="mt-3 pt-3 border-t border-gray-100 flex items-center justify-between text-xs font-bold text-[var(--gojek-green)]">
+                  <span>Lihat Detail & Share Struk</span>
+                  <ArrowRight size={14} className="transition-transform group-hover:translate-x-1" />
                 </div>
               </Link>
             ))}

@@ -267,3 +267,18 @@ input::placeholder,
 textarea::placeholder {
   color: #9ca3af !important; /* gray-400 - lighter placeholder */
 }
+
+/* PWA Toast Slide-up Animation */
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+.animate-slide-up {
+  animation: slideUp 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}

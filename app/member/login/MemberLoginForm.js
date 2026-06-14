@@ -54,7 +54,16 @@ export default function MemberLoginForm() {
       setStep('otp')
       setMessage('Kode OTP berhasil dikirim. Silakan cek SMS/WhatsApp Anda.')
     } catch (err) {
-      setMessage(err.message || 'Gagal mengirim OTP')
+      console.error('OTP Send Error:', err)
+      let errMsg = err.message || 'Gagal mengirim OTP'
+      if (
+        errMsg.toLowerCase().includes('failed to send a request') ||
+        errMsg.toLowerCase().includes('failed to fetch') ||
+        errMsg.toLowerCase().includes('networkerror')
+      ) {
+        errMsg = 'Gagal mengirim OTP. Harap periksa koneksi internet Anda atau matikan AdBlock / Brave Shields jika aktif, kemudian coba lagi.'
+      }
+      setMessage(errMsg)
     } finally {
       setLoading(false)
     }
@@ -82,7 +91,16 @@ export default function MemberLoginForm() {
       setMessage('Login berhasil. Mengarahkan…')
       router.replace('/member/dashboard')
     } catch (err) {
-      setMessage(err.message || 'Gagal verifikasi OTP')
+      console.error('OTP Verify Error:', err)
+      let errMsg = err.message || 'Gagal verifikasi OTP'
+      if (
+        errMsg.toLowerCase().includes('failed to send a request') ||
+        errMsg.toLowerCase().includes('failed to fetch') ||
+        errMsg.toLowerCase().includes('networkerror')
+      ) {
+        errMsg = 'Gagal verifikasi OTP. Harap periksa koneksi internet Anda atau matikan AdBlock / Brave Shields jika aktif, kemudian coba lagi.'
+      }
+      setMessage(errMsg)
     } finally {
       setLoading(false)
     }

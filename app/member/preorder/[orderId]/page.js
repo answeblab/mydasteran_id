@@ -8,6 +8,7 @@ import {
     CheckCircle,
     Package,
     Truck,
+    Coins,
 } from "lucide-react";
 import { use } from "react";
 import MobileHeader from "@/components/mobile/MobileHeader";
@@ -17,6 +18,7 @@ export default function PreorderDetailPage({ params }) {
     const router = useRouter();
     const [order, setOrder] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [loyaltyTier, setLoyaltyTier] = useState('agen');
     const [items, setItems] = useState([]);
     const [payments, setPayments] = useState([]);
     const [productionData, setProductionData] = useState([]);
@@ -44,6 +46,17 @@ export default function PreorderDetailPage({ params }) {
                     console.error('Customer not found');
                     setLoading(false);
                     return;
+                }
+
+                // Fetch loyalty tier
+                const { data: loyaltyData } = await supabase
+                    .from('loyalty_accounts')
+                    .select('tier')
+                    .eq('customer_id', customerData.id)
+                    .single();
+
+                if (loyaltyData?.tier) {
+                    setLoyaltyTier(loyaltyData.tier);
                 }
 
                 // Fetch order with relations
@@ -457,6 +470,21 @@ export default function PreorderDetailPage({ params }) {
                                 </p>
                             </div>
                         )}
+
+                        {/* Point Estimation Badge */}
+                        {(() => {
+                            const multiplier = loyaltyTier === 'sultan' ? 1.5 : loyaltyTier === 'juragan' ? 1.2 : 1.0;
+                            const estimatedPoints = Math.floor((order.grand_total || 0) * 0.01 * multiplier);
+                            return (
+                                <>
+                                    <div className="border-t border-gray-100 pt-3 mt-2"></div>
+                                    <div className="flex items-center gap-2 text-xs font-semibold bg-gradient-to-r from-amber-50 to-yellow-50 text-amber-800 border border-amber-200/50 rounded-lg p-2.5 mt-2">
+                                        <Coins size={14} className="text-yellow-500 fill-yellow-400 animate-pulse" />
+                                        <span>Estimasi Cashback: +{estimatedPoints.toLocaleString('id-ID')} Poin setelah pesanan selesai</span>
+                                    </div>
+                                </>
+                            );
+                        })()}
                     </div>
                 </div>
 

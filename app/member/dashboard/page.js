@@ -4,8 +4,9 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase/client";
-import { Wallet, TrendingUp, Package, ChevronRight, Sparkles, Gift, Coins, Info, X, Download } from "lucide-react";
-import MobileHeader from "@/components/mobile/MobileHeader";
+import { Wallet, Package, Sparkles, Coins, Info, X, Download, TrendingUp } from "lucide-react";
+import ExpiryAlert from "@/app/member/_components/ExpiryAlert";
+import { SkeletonDashboard } from "@/app/member/_components/SkeletonCard";
 
 export default function MemberDashboardPage() {
   const router = useRouter();
@@ -17,10 +18,23 @@ export default function MemberDashboardPage() {
   const [totalOrders, setTotalOrders] = useState(0);
   const [showTerms, setShowTerms] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [monthlyStats, setMonthlyStats] = useState([]);
+  const [currentPromoIndex, setCurrentPromoIndex] = useState(0);
+  const [promos, setPromos] = useState([]);
+
+  useEffect(() => {
+    if (promos.length <= 1) return;
+    const interval = setInterval(() => {
+      setCurrentPromoIndex((prev) => (prev + 1) % promos.length);
+    }, 4500);
+    return () => clearInterval(interval);
+  }, [promos.length]);
 
   // PWA Install Logic
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [showInstallBtn, setShowInstallBtn] = useState(false);
+  const [dismissedInstall, setDismissedInstall] = useState(false);
+  const [showToast, setShowToast] = useState(false);
 
   useEffect(() => {
     const handler = (e) => {
@@ -31,6 +45,17 @@ export default function MemberDashboardPage() {
     window.addEventListener('beforeinstallprompt', handler);
     return () => window.removeEventListener('beforeinstallprompt', handler);
   }, []);
+
+  useEffect(() => {
+    if (showInstallBtn && !dismissedInstall) {
+      const timer = setTimeout(() => {
+        setShowToast(true);
+      }, 2500);
+      return () => clearTimeout(timer);
+    } else {
+      setShowToast(false);
+    }
+  }, [showInstallBtn, dismissedInstall]);
 
   useEffect(() => {
     const loadData = async () => {
@@ -143,6 +168,49 @@ export default function MemberDashboardPage() {
           setTotalOrders(ordersCount);
         }
 
+        // Fetch 6-month spending stats from v_order_history
+        const sixMonthsAgo = new Date();
+        sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5);
+        const { data: historyData } = await supabase
+          .from('v_order_history')
+          .select('grand_total, year, month')
+          .eq('customer_id', customerData.id)
+          .eq('payment_status', 'paid')
+          .gte('year', sixMonthsAgo.getFullYear())
+          .order('year', { ascending: true })
+          .order('month', { ascending: true });
+
+        if (historyData) {
+          // Group by year-month
+          const statsMap = {};
+          historyData.forEach(order => {
+            const key = `${order.year}-${String(order.month).padStart(2, '0')}`;
+            statsMap[key] = (statsMap[key] || 0) + (order.grand_total || 0);
+          });
+
+          // Build 6-month array (fill missing months with 0)
+          const months = [];
+          for (let i = 5; i >= 0; i--) {
+            const d = new Date();
+            d.setMonth(d.getMonth() - i);
+            const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+            const label = d.toLocaleString('id-ID', { month: 'short' });
+            months.push({ key, label, total: statsMap[key] || 0 });
+          }
+          setMonthlyStats(months);
+        }
+
+        // Fetch Active Promo Banners
+        const { data: promoData } = await supabase
+          .from('promo_banners')
+          .select('id, title, description, bg_color, valid_until')
+          .eq('is_active', true)
+          .order('created_at', { ascending: false });
+
+        if (promoData) {
+          setPromos(promoData);
+        }
+
         setLoading(false);
       } catch (err) {
         console.error(err);
@@ -154,14 +222,7 @@ export default function MemberDashboardPage() {
   }, [router]);
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-gray-200 border-t-[var(--gojek-green)] rounded-full animate-spin mx-auto"></div>
-          <p className="mt-4 text-gray-500">Memuat...</p>
-        </div>
-      </div>
-    );
+    return <SkeletonDashboard />;
   }
 
   const tierInfo = {
@@ -200,31 +261,53 @@ export default function MemberDashboardPage() {
     <div className="min-h-screen bg-gray-50">
       {/* Header with Greeting */}
       <div className="bg-gradient-to-br from-[var(--gojek-green)] to-[var(--gojek-green-dark)] pt-safe">
-        <div className="p-4 pb-6 flex justify-between items-start">
-          <div>
-            <h1 className="text-white text-2xl font-bold mb-1">
-              Halo, {customer?.name?.split(' ')[0] || 'Member'}! 👋
-            </h1>
-            <p className="text-white/80 text-sm">Selamat datang kembali</p>
-          </div>
-
-          {/* PWA Install Button */}
-          {showInstallBtn && (
-            <button
-              onClick={handleInstallClick}
-              className="bg-white/10 hover:bg-white/20 backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 transition-colors border border-white/20"
-            >
-              <Download size={14} />
-              Install App
-            </button>
-          )}
+        <div className="p-4 pb-6">
+          <h1 className="text-white text-2xl font-bold mb-1">
+            Halo, {customer?.name?.split(' ')[0] || 'Member'}! 👋
+          </h1>
+          <p className="text-white/80 text-sm">Selamat datang kembali</p>
         </div>
       </div>
 
       {/* Main Content */}
       <div className="px-4 -mt-4 pb-6 space-y-4">
+        {/* Beautiful Redesigned PWA Install Card */}
+        {showInstallBtn && !dismissedInstall && (
+          <div className="relative overflow-hidden rounded-2xl bg-white p-4 shadow-md border border-emerald-50 flex items-center gap-3.5 transition-all duration-300 animate-fade-in">
+            {/* Soft decorative background glow */}
+            <div className="absolute -right-6 -bottom-6 w-24 h-24 bg-[var(--gojek-green)]/5 rounded-full blur-xl pointer-events-none" />
+
+            {/* Close Button */}
+            <button
+              onClick={() => setDismissedInstall(true)}
+              className="absolute top-2 right-2 p-1 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 transition-colors"
+            >
+              <X size={14} />
+            </button>
+
+            {/* Left side: Premium App Icon Preview */}
+            <div className="w-11 h-11 rounded-xl bg-gradient-to-tr from-[var(--gojek-green)] to-emerald-500 flex items-center justify-center flex-shrink-0 shadow-sm shadow-emerald-100">
+              <Download size={20} className="text-white animate-pulse" />
+            </div>
+
+            {/* Middle: Content */}
+            <div className="flex-1 min-w-0 pr-4">
+              <h4 className="text-xs font-bold text-gray-900 leading-tight">Pasang Aplikasi MyDasteran</h4>
+              <p className="text-[10px] text-gray-500 mt-0.5 leading-normal">Lebih cepat, hemat kuota & langsung dari homescreen HP Anda</p>
+            </div>
+
+            {/* Right side: Action Button */}
+            <button
+              onClick={handleInstallClick}
+              className="bg-[var(--gojek-green)] hover:bg-[var(--gojek-green-dark)] active:scale-95 transition-all text-white px-3.5 py-1.5 rounded-xl text-xs font-bold shadow-sm shadow-emerald-100 flex-shrink-0"
+            >
+              Pasang
+            </button>
+          </div>
+        )}
+
         {/* Loyalty Card - Member Style */}
-        <Link href="/member/profile">
+        <Link href="/member/points">
           <div className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${cardGradient} p-5 text-white shadow-xl transform transition-transform active:scale-[0.98] border border-white/10`}>
             {/* Decorative Background Elements - Modern Clean Glows */}
             <div className="absolute top-0 right-0 -mr-24 -mt-24 h-72 w-72 rounded-full bg-white/20 blur-3xl pointer-events-none mix-blend-overlay"></div>
@@ -284,9 +367,22 @@ export default function MemberDashboardPage() {
                   </p>
                 </div>
               )}
+
+              {/* Tap Indicator Footer */}
+              <div className="mt-4 pt-3 border-t border-white/10 flex items-center justify-between text-[11px] text-white/95 font-semibold">
+                <span className="flex items-center gap-1.5">
+                  <Coins size={12} className="text-yellow-300 fill-yellow-300" />
+                  Lihat Detail Benefit & Riwayat Poin
+                </span>
+                <span className="bg-white/20 px-2 py-0.5 rounded-full text-[10px] backdrop-blur-sm">
+                  Buka →
+                </span>
+              </div>
             </div>
           </div>
         </Link>
+
+
 
         {/* Quick Info Cards */}
         <div className="mt-4">
@@ -320,15 +416,83 @@ export default function MemberDashboardPage() {
           </div>
         </div>
 
+        {/* Monthly Spending Chart */}
+        {monthlyStats.length > 0 && monthlyStats.some(m => m.total > 0) && (() => {
+          const maxTotal = Math.max(...monthlyStats.map(m => m.total), 1);
+          const bestMonth = monthlyStats.reduce((a, b) => b.total > a.total ? b : a, monthlyStats[0]);
+          const totalPeriod = monthlyStats.reduce((s, m) => s + m.total, 0);
+          return (
+            <div className="gojek-card">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h2 className="font-bold text-gray-900">Statistik Belanja</h2>
+                  <p className="text-xs text-gray-500 mt-0.5">6 bulan terakhir</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs text-gray-500">Total periode</p>
+                  <p className="text-sm font-bold text-[var(--gojek-green)]">
+                    Rp {(totalPeriod / 1000000).toFixed(1)}jt
+                  </p>
+                </div>
+              </div>
+
+              {/* Bar chart */}
+              <div className="flex items-end gap-1.5 h-24 mb-2">
+                {monthlyStats.map((m) => {
+                  const heightPct = maxTotal > 0 ? (m.total / maxTotal) * 100 : 0;
+                  const isBest = m.key === bestMonth.key && m.total > 0;
+                  return (
+                    <div key={m.key} className="flex-1 flex flex-col items-center gap-1">
+                      <div className="w-full flex items-end justify-center" style={{ height: '88px' }}>
+                        <div
+                          className={`w-full rounded-t-lg transition-all duration-700 ${
+                            isBest
+                              ? 'bg-[var(--gojek-green)]'
+                              : m.total > 0
+                              ? 'bg-[var(--gojek-green-light)] border border-[var(--gojek-green)]/20'
+                              : 'bg-gray-100'
+                          }`}
+                          style={{ height: `${Math.max(heightPct, m.total > 0 ? 8 : 4)}%` }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Month labels */}
+              <div className="flex gap-1.5">
+                {monthlyStats.map((m) => (
+                  <div key={m.key} className="flex-1 text-center">
+                    <p className="text-[9px] text-gray-400 font-medium">{m.label}</p>
+                  </div>
+                ))}
+              </div>
+
+              {bestMonth.total > 0 && (
+                <div className="mt-3 pt-3 border-t border-gray-100 flex items-center gap-2">
+                  <TrendingUp size={14} className="text-[var(--gojek-green)]" />
+                  <p className="text-xs text-gray-500">
+                    Terbaik: <span className="font-semibold text-gray-700">{bestMonth.label}</span>
+                    {' '}— Rp {(bestMonth.total / 1000000).toFixed(1)}jt
+                  </p>
+                </div>
+              )}
+            </div>
+          );
+        })()}
+
+        {/* Expiry Alert */}
+        <ExpiryAlert loyaltyHistory={loyaltyHistory} />
 
         {/* Loyalty Transaction History */}
         {loyaltyHistory.length > 0 && (
           <div>
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-bold text-gray-900">Point Cashback Bulan Ini</h2>
-              <span className="text-xs bg-[var(--gojek-green-light)] text-[var(--gojek-green)] px-2 py-1 rounded-full">
-                {loyaltyHistory.length} aktivitas
-              </span>
+              <Link href="/member/points" className="text-xs font-bold text-[var(--gojek-green)] hover:underline">
+                Lihat Semua
+              </Link>
             </div>
             <div className="gojek-card space-y-3">
               {loyaltyHistory.map((tx) => {
@@ -384,6 +548,60 @@ export default function MemberDashboardPage() {
                 );
               })}
             </div>
+          </div>
+        )}
+        {/* Promo Carousel */}
+        {promos.length > 0 && (
+          <div className="gojek-card relative overflow-hidden bg-white p-4 mt-4">
+            <h3 className="font-bold text-gray-900 mb-3 text-sm flex items-center gap-1.5">
+              <Sparkles size={16} className="text-yellow-500 fill-yellow-400" />
+              Promo Spesial Untukmu
+            </h3>
+            <div className="relative h-32 overflow-hidden rounded-xl">
+              {promos.map((promo, idx) => {
+                const isActive = idx === currentPromoIndex;
+                const validUntil = promo.valid_until
+                  ? new Date(promo.valid_until).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })
+                  : null;
+                return (
+                  <div
+                    key={promo.id}
+                    className={`absolute inset-0 bg-gradient-to-br ${promo.bg_color || 'from-pink-500 via-rose-500 to-red-600'} p-4 text-white flex flex-col justify-between transition-all duration-700 transform ${
+                      isActive ? "opacity-100 translate-x-0 scale-100" : "opacity-0 translate-x-full scale-95 pointer-events-none"
+                    }`}
+                  >
+                    {/* Decorative glow */}
+                    <div className="absolute top-0 right-0 -mr-10 -mt-10 h-32 w-32 rounded-full bg-white/10 blur-2xl pointer-events-none" />
+                    <div className="relative z-10">
+                      <h4 className="font-bold text-sm leading-tight">{promo.title}</h4>
+                      <p className="text-[11px] text-white/85 mt-1.5 leading-relaxed line-clamp-2">{promo.description}</p>
+                    </div>
+                    {validUntil && (
+                      <div className="relative z-10 flex items-center gap-1.5 mt-2">
+                        <span className="bg-black/20 backdrop-blur-sm border border-white/20 rounded-full px-2.5 py-0.5 text-[10px] font-medium">
+                          📅 Berlaku s/d {validUntil}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Dots Indicator */}
+            {promos.length > 1 && (
+              <div className="flex justify-center gap-1.5 mt-2.5">
+                {promos.map((_, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setCurrentPromoIndex(idx)}
+                    className={`h-1.5 rounded-full transition-all duration-300 ${
+                      idx === currentPromoIndex ? "w-4 bg-[var(--gojek-green)]" : "w-1.5 bg-gray-200"
+                    }`}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -451,6 +669,38 @@ export default function MemberDashboardPage() {
           </div>
         </div>
       )}
-    </div >
+
+      {/* Floating PWA Install Notification Toast */}
+      {showToast && (
+        <div className="fixed bottom-20 left-4 right-4 z-[60] bg-emerald-950/95 backdrop-blur-md text-white px-4 py-3 rounded-2xl shadow-xl flex items-center justify-between border border-emerald-800/50 animate-slide-up">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[var(--gojek-green)] to-emerald-500 flex items-center justify-center flex-shrink-0 shadow-inner">
+              <Download size={16} className="text-white animate-bounce" />
+            </div>
+            <div className="min-w-0">
+              <h5 className="text-xs font-bold leading-tight">Instal MyDasteran App</h5>
+              <p className="text-[9px] text-emerald-200 mt-0.5 leading-tight">Akses cepat, langsung dari HP Anda!</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <button
+              onClick={handleInstallClick}
+              className="bg-emerald-500 hover:bg-emerald-600 active:scale-95 transition-all text-white text-[10px] font-bold px-3 py-1.5 rounded-lg shadow-sm"
+            >
+              Pasang
+            </button>
+            <button
+              onClick={() => {
+                setShowToast(false);
+                setDismissedInstall(true);
+              }}
+              className="p-1 hover:bg-white/10 rounded-full text-emerald-300 transition-colors"
+            >
+              <X size={14} />
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
